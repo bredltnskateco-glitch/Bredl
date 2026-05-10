@@ -1,0 +1,131 @@
+/* ============================================
+   ADMIN DASHBOARD - Layout Styles
+============================================ */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #0a0a0a;
+}
+
+/* Main Content */
+.admin-main {
+  flex: 1;
+  margin-left: 70px;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+}
+
+.admin-layout:has(.admin-sidebar:hover) .admin-main {
+  margin-left: 260px;
+}
+
+.admin-main.sidebar-closed {
+  margin-left: 0;
+}
+
+/* Header */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: #111;
+  border-bottom: 1px solid #222;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.view-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.view-store-btn:hover {
+  background: #e0e0e0;
+}
+
+.header-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff;
+  color: #000;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-action-btn:hover {
+  background: #e0e0e0;
+}
+
+/* Content Area */
+.admin-content {
+  padding: 30px;
+  flex: 1;
+}
+
+
+
+/* ============================================
+   RESPONSIVE
+============================================ */
+@media (max-width: 768px) {
+  .admin-main {
+    margin-left: 0;
+  }
+  
+  .mobile-menu-btn {
+    display: block;
+  }
+  
+  .admin-header {
+    padding: 16px 20px;
+  }
+  
+  .page-title {
+    font-size: 1.2rem;
+  }
+  
+  .admin-content {
+    padding: 20px;
+  }
+}

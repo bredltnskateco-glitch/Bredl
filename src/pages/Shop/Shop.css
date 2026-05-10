@@ -1,0 +1,94 @@
+/* Shop Page Base Styles */
+
+.shop-page {
+  padding-top: 80px;
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 40px;
+  color: #000;
+}
+
+/* Shop Main Section */
+.shop-main {
+  padding: 60px 20px;
+}
+
+/* Shop Content Layout */
+.shop-content {
+  display: flex;
+  gap: 40px;
+}
+
+/* Products Container */
+.products-container {
+  flex: 1;
+}
+
+.products-grid {
+  display: grid;
+  gap: 30px;
+}
+
+.products-grid.grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.products-grid.list {
+  grid-template-columns: 1fr;
+}
+
+/* Load More */
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+}
+
+.load-more-btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 18px 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.load-more-btn:hover {
+  background: #333;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .products-grid.grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .products-grid.grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid.grid {
+    gap: 15px;
+  }
+}

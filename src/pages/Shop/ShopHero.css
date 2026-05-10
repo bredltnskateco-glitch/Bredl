@@ -1,0 +1,67 @@
+/* Shop Hero Styles */
+.shop-hero {
+  background: #000;
+  color: #fff;
+  padding: 80px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.shop-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(30,30,30,0.95) 100%);
+  z-index: 1;
+}
+
+.shop-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.shop-hero h1 {
+  font-size: 5rem;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+}
+
+.shop-hero p {
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.7);
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .shop-hero h1 {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .shop-hero {
+    padding: 50px 20px;
+  }
+  
+  .shop-hero h1 {
+    font-size: 2.5rem;
+    letter-spacing: 0.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-hero h1 {
+    font-size: 2rem;
+  }
+}

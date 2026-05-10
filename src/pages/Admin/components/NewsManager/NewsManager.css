@@ -1,0 +1,384 @@
+.news-manager {
+    padding: 0;
+}
+
+.manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 16px;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box svg {
+    color: #666;
+}
+
+.search-box input {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 0.9rem;
+    width: 100%;
+    outline: none;
+}
+
+.search-box input::placeholder {
+    color: #666;
+}
+
+.add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-btn:hover {
+    background: #e0e0e0;
+}
+
+/* Table */
+.news-table-container {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.news-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.news-table thead {
+    background: #252525;
+}
+
+.news-table th {
+    padding: 16px;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.news-table td {
+    padding: 16px;
+    border-top: 1px solid #333;
+    vertical-align: middle;
+}
+
+.news-table tbody tr {
+    transition: background 0.2s;
+}
+
+.news-table tbody tr:hover {
+    background: #222;
+}
+
+.news-table tbody tr.featured-row {
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.news-table tbody tr.featured-row:hover {
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.article-cell {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.article-thumb {
+    width: 80px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.article-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.article-title {
+    font-weight: 500;
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+.article-link {
+    font-size: 0.8rem;
+    color: #666;
+    text-decoration: none;
+}
+
+.article-link:hover {
+    color: #888;
+}
+
+.date-cell {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.featured-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #252525;
+    border: 1px solid #333;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.featured-btn:hover {
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+.featured-btn.active {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+.featured-btn.active svg {
+    fill: #ffd700;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #252525;
+    border: 1px solid #333;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn.edit:hover {
+    background: #1e3a5f;
+    border-color: #64b5f6;
+    color: #64b5f6;
+}
+
+.action-btn.delete:hover {
+    background: #5f1e1e;
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    color: #fff;
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.modal-content form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #555;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.checkbox-group {
+    margin-top: 8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ccc;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    accent-color: #ffd700;
+}
+
+.checkbox-hint {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-cancel,
+.btn-save {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: #252525;
+    border: 1px solid #333;
+    color: #888;
+}
+
+.btn-cancel:hover {
+    background: #333;
+    color: #fff;
+}
+
+.btn-save {
+    background: #fff;
+    border: none;
+    color: #000;
+}
+
+.btn-save:hover {
+    background: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+    .manager-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box {
+        max-width: none;
+    }
+
+    .news-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .article-cell {
+        min-width: 250px;
+    }
+}

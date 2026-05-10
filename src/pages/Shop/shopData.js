@@ -1,0 +1,472 @@
+// Categories with subcategories
+export const categories = [
+  { id: 'all', name: 'All Products', subcategories: [] },
+  { 
+    id: 'skate', 
+    name: 'Skateboard', 
+    subcategories: [
+      { id: 'complete', name: 'Complete Skateboards' },
+      { id: 'decks', name: 'Decks' },
+      { id: 'trucks', name: 'Trucks' },
+      { id: 'wheels', name: 'Wheels' },
+      { id: 'bearings', name: 'Bearings' },
+      { id: 'griptape', name: 'Griptape' },
+      { id: 'hardware', name: 'Hardware' },
+      { id: 'cruisers', name: 'Cruisers' },
+      { id: 'longboards', name: 'Longboards' },
+    ]
+  },
+  { 
+    id: 'streetwear', 
+    name: 'Streetwear', 
+    subcategories: [
+      { id: 'tshirts', name: 'T-Shirts' },
+      { id: 'hoodies', name: 'Hoodies & Pullovers' },
+      { id: 'jackets', name: 'Jackets & Coats' },
+      { id: 'pants', name: 'Pants & Jeans' },
+      { id: 'shorts', name: 'Shorts' },
+      { id: 'shirts', name: 'Shirts' },
+      { id: 'sweaters', name: 'Sweaters & Knitwear' },
+    ]
+  },
+  { 
+    id: 'shoes', 
+    name: 'Shoes', 
+    subcategories: [
+      { id: 'skate-shoes', name: 'Skate Shoes' },
+      { id: 'sneakers', name: 'Sneakers' },
+      { id: 'boots', name: 'Boots' },
+      { id: 'sandals', name: 'Sandals & Slides' },
+    ]
+  },
+  { 
+    id: 'accessories', 
+    name: 'Accessories', 
+    subcategories: [
+      { id: 'caps', name: 'Caps & Hats' },
+      { id: 'beanies', name: 'Beanies' },
+      { id: 'bags', name: 'Bags & Backpacks' },
+      { id: 'wallets', name: 'Wallets' },
+      { id: 'belts', name: 'Belts' },
+      { id: 'socks', name: 'Socks' },
+      { id: 'sunglasses', name: 'Sunglasses' },
+      { id: 'watches', name: 'Watches' },
+    ]
+  },
+  { 
+    id: 'protection', 
+    name: 'Protection', 
+    subcategories: [
+      { id: 'helmets', name: 'Helmets' },
+      { id: 'pads', name: 'Knee & Elbow Pads' },
+      { id: 'wrist-guards', name: 'Wrist Guards' },
+      { id: 'protection-sets', name: 'Protection Sets' },
+    ]
+  },
+];
+
+export const brands = [
+  'All Brands', 'Nike SB', 'adidas Skateboarding', 'Vans', 'Carhartt WIP', 
+  'Dickies', 'Patagonia', 'The North Face', 'Santa Cruz', 'Independent', 
+  'Spitfire', 'Hockey Skateboards', 'Polar Skate', 'Palace', 'Dime'
+];
+
+export const sizes = ['All Sizes', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+export const priceRanges = [
+  { id: 'all', name: 'All Prices' },
+  { id: '0-50', name: 'Under €50' },
+  { id: '50-100', name: '€50 - €100' },
+  { id: '100-200', name: '€100 - €200' },
+  { id: '200+', name: 'Over €200' },
+];
+
+export const sortOptions = [
+  { id: 'newest', name: 'Newest First' },
+  { id: 'price-low', name: 'Price: Low to High' },
+  { id: 'price-high', name: 'Price: High to Low' },
+  { id: 'popular', name: 'Most Popular' },
+  { id: 'sale', name: 'On Sale' },
+];
+
+export const products = [
+  {
+    id: 1,
+    name: 'Nike SB Dunk Low Pro Skate Shoes',
+    brand: 'Nike SB',
+    category: 'shoes',
+    subcategory: 'skate-shoes',
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=600&fit=crop&sat=-100',
+    price: 109.95,
+    salePrice: null,
+    isNew: true,
+    colors: ['Black', 'White', 'Grey'],
+    shoeSize: ['38', '39', '40', '41', '42', '43', '44', '45']
+  },
+  {
+    id: 2,
+    name: 'Carhartt WIP OG Chore Coat',
+    brand: 'Carhartt WIP',
+    category: 'streetwear',
+    subcategory: 'jackets',
+    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=600&fit=crop&sat=-100',
+    price: 189.00,
+    salePrice: 151.20,
+    isNew: false,
+    colors: ['Brown', 'Black'],
+    sizes: ['S', 'M', 'L', 'XL', 'XXL']
+  },
+  {
+    id: 3,
+    name: 'Hockey Skateboards Vandal Deck 8.25"',
+    brand: 'Hockey Skateboards',
+    category: 'skate',
+    subcategory: 'decks',
+    image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=500&h=600&fit=crop&sat=-100',
+    price: 85.00,
+    salePrice: null,
+    isNew: true,
+    colors: [],
+    deckWidth: '8.25"',
+    deckLength: '31.85"',
+    wheelbase: '14.25"',
+    concave: 'Medium',
+    material: '7-Ply Maple'
+  },
+  {
+    id: 4,
+    name: 'Patagonia Better Sweater Fleece',
+    brand: 'Patagonia',
+    category: 'streetwear',
+    subcategory: 'sweaters',
+    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop&sat=-100',
+    price: 139.00,
+    salePrice: 111.20,
+    isNew: false,
+    colors: ['Grey', 'Navy', 'Green'],
+    sizes: ['XS', 'S', 'M', 'L', 'XL']
+  },
+  {
+    id: 5,
+    name: 'Vans Sk8-Hi Pro Skate Shoes',
+    brand: 'Vans',
+    category: 'shoes',
+    subcategory: 'skate-shoes',
+    image: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=500&h=600&fit=crop&sat=-100',
+    price: 89.95,
+    salePrice: null,
+    isNew: false,
+    colors: ['Black/White', 'Navy', 'Red'],
+    shoeSize: ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
+  },
+  {
+    id: 6,
+    name: 'Independent Stage 11 Trucks',
+    brand: 'Independent',
+    category: 'skate',
+    subcategory: 'trucks',
+    image: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=500&h=600&fit=crop&sat=-100',
+    price: 62.00,
+    salePrice: null,
+    isNew: false,
+    colors: ['Silver', 'Black'],
+    truckSize: '149mm',
+    axleWidth: '8.5"',
+    material: 'Aluminum/Steel'
+  },
+  {
+    id: 7,
+    name: 'Dickies 874 Original Work Pants',
+    brand: 'Dickies',
+    category: 'streetwear',
+    subcategory: 'pants',
+    image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500&h=600&fit=crop&sat=-100',
+    price: 59.00,
+    salePrice: 47.20,
+    isNew: false,
+    colors: ['Black', 'Khaki', 'Navy'],
+    sizes: ['28', '30', '32', '34', '36', '38']
+  },
+  {
+    id: 8,
+    name: 'Spitfire Formula Four Wheels 54mm',
+    brand: 'Spitfire',
+    category: 'skate',
+    subcategory: 'wheels',
+    image: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=500&h=600&fit=crop&sat=-100',
+    price: 42.00,
+    salePrice: null,
+    isNew: true,
+    colors: [],
+    wheelSize: '54mm',
+    durometer: '99a',
+    wheelShape: 'Classic',
+    material: 'Urethane'
+  },
+  {
+    id: 9,
+    name: 'Palace Tri-Ferg Hoodie',
+    brand: 'Palace',
+    category: 'streetwear',
+    subcategory: 'hoodies',
+    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop&sat=-100',
+    price: 148.00,
+    salePrice: null,
+    isNew: true,
+    colors: ['Black', 'White', 'Grey'],
+    sizes: ['S', 'M', 'L', 'XL']
+  },
+  {
+    id: 10,
+    name: 'adidas Skateboarding Busenitz',
+    brand: 'adidas Skateboarding',
+    category: 'shoes',
+    subcategory: 'skate-shoes',
+    image: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=500&h=600&fit=crop&sat=-100',
+    price: 94.95,
+    salePrice: 75.96,
+    isNew: false,
+    colors: ['Black', 'White', 'Gum'],
+    shoeSize: ['39', '40', '41', '42', '43', '44', '45', '46', '47']
+  },
+  {
+    id: 11,
+    name: 'Polar Skate Co. Big Boy Jeans',
+    brand: 'Polar Skate',
+    category: 'streetwear',
+    subcategory: 'pants',
+    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=600&fit=crop&sat=-100',
+    price: 120.00,
+    salePrice: null,
+    isNew: false,
+    colors: ['Light Blue', 'Dark Blue', 'Black'],
+    sizes: ['28', '30', '32', '34', '36']
+  },
+  {
+    id: 12,
+    name: 'Santa Cruz Classic Dot Beanie',
+    brand: 'Santa Cruz',
+    category: 'accessories',
+    subcategory: 'beanies',
+    image: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=500&h=600&fit=crop&sat=-100',
+    price: 28.00,
+    salePrice: null,
+    isNew: false,
+    colors: ['Black', 'Red', 'Navy']
+  },
+  {
+    id: 13,
+    name: 'Independent Truck Co. Belt',
+    brand: 'Independent',
+    category: 'accessories',
+    subcategory: 'belts',
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=600&fit=crop&sat=-100',
+    price: 35.00,
+    salePrice: 28.00,
+    isNew: false,
+    colors: ['Black', 'Brown']
+  },
+  {
+    id: 14,
+    name: 'Santa Cruz Classic Dot Complete 8.0"',
+    brand: 'Santa Cruz',
+    category: 'skate',
+    subcategory: 'complete',
+    image: 'https://images.unsplash.com/photo-1520045892732-304bc3ac5d8e?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1520045892732-304bc3ac5d8e?w=500&h=600&fit=crop&sat=-100',
+    price: 149.00,
+    salePrice: null,
+    isNew: true,
+    colors: [],
+    deckWidth: '8.0"',
+    concave: 'Medium'
+  },
+  {
+    id: 19,
+    name: 'Triple Eight Dual Certified Helmet',
+    brand: 'Triple Eight',
+    category: 'protection',
+    subcategory: 'helmets',
+    image: 'https://images.unsplash.com/photo-1557296387-5358ad7997bb?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1557296387-5358ad7997bb?w=500&h=600&fit=crop&sat=-100',
+    price: 65.00,
+    salePrice: null,
+    isNew: false,
+    colors: ['Black', 'White', 'Blue'],
+    sizes: ['S', 'M', 'L', 'XL']
+  },
+  {
+    id: 20,
+    name: 'Pro-Tec Street Knee Pads',
+    brand: 'Pro-Tec',
+    category: 'protection',
+    subcategory: 'pads',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&h=600&fit=crop&sat=-100',
+    price: 45.00,
+    salePrice: 36.00,
+    isNew: false,
+    colors: ['Black'],
+    sizes: ['S', 'M', 'L']
+  },
+  {
+    id: 21,
+    name: 'Dime Classic Logo T-Shirt',
+    brand: 'Dime',
+    category: 'streetwear',
+    subcategory: 'tshirts',
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop&sat=-100',
+    price: 45.00,
+    salePrice: null,
+    isNew: true,
+    colors: ['White', 'Black', 'Grey', 'Navy'],
+    sizes: ['S', 'M', 'L', 'XL']
+  },
+  {
+    id: 22,
+    name: 'New Era 9FIFTY Snapback Cap',
+    brand: 'New Era',
+    category: 'accessories',
+    subcategory: 'caps',
+    image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=500&h=600&fit=crop&sat=-100',
+    price: 35.00,
+    salePrice: null,
+    isNew: false,
+    colors: ['Black', 'Navy', 'Red']
+  },
+  {
+    id: 23,
+    name: 'Bones Reds Bearings',
+    brand: 'Bones',
+    category: 'skate',
+    subcategory: 'bearings',
+    image: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=500&h=600&fit=crop&sat=-100',
+    price: 22.00,
+    salePrice: null,
+    isNew: false,
+    colors: []
+  },
+  {
+    id: 24,
+    name: 'Penny Australia Cruiser 22"',
+    brand: 'Penny',
+    category: 'skate',
+    subcategory: 'cruisers',
+    image: 'https://images.unsplash.com/photo-1531565637446-32307b194362?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1531565637446-32307b194362?w=500&h=600&fit=crop&sat=-100',
+    price: 99.00,
+    salePrice: 79.20,
+    isNew: false,
+    colors: ['Yellow', 'Blue', 'Pink', 'Black']
+  },
+  {
+    id: 25,
+    name: 'Loaded Dervish Sama Longboard',
+    brand: 'Loaded',
+    category: 'skate',
+    subcategory: 'longboards',
+    image: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=500&h=600&fit=crop&sat=-100',
+    price: 299.00,
+    salePrice: null,
+    isNew: true,
+    colors: [],
+    boardLength: '42.8"',
+    flex: 'Flexy'
+  },
+  {
+    id: 26,
+    name: 'Herschel Heritage Backpack',
+    brand: 'Herschel',
+    category: 'accessories',
+    subcategory: 'bags',
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=600&fit=crop&sat=-100',
+    price: 89.00,
+    salePrice: null,
+    isNew: false,
+    colors: ['Black', 'Navy', 'Grey']
+  },
+  {
+    id: 27,
+    name: 'Stance Socks Icon 3-Pack',
+    brand: 'Stance',
+    category: 'accessories',
+    subcategory: 'socks',
+    image: 'https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=500&h=600&fit=crop&sat=-100',
+    price: 28.00,
+    salePrice: 22.40,
+    isNew: false,
+    colors: ['Multi'],
+    sizes: ['S', 'M', 'L']
+  },
+  {
+    id: 28,
+    name: 'Nike SB Zoom Blazer Mid',
+    brand: 'Nike SB',
+    category: 'shoes',
+    subcategory: 'sneakers',
+    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=600&fit=crop',
+    hoverImage: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=600&fit=crop&sat=-100',
+    price: 99.95,
+    salePrice: null,
+    isNew: true,
+    colors: ['White/Black', 'Black/Gum'],
+    shoeSize: ['38', '39', '40', '41', '42', '43', '44', '45', '46']
+  },
+];
+
+export const topBrands = [
+  { name: 'Nike SB', logo: 'https://via.placeholder.com/120x60?text=Nike+SB' },
+  { name: 'adidas', logo: 'https://via.placeholder.com/120x60?text=adidas' },
+  { name: 'Carhartt WIP', logo: 'https://via.placeholder.com/120x60?text=Carhartt' },
+  { name: 'Vans', logo: 'https://via.placeholder.com/120x60?text=Vans' },
+  { name: 'Patagonia', logo: 'https://via.placeholder.com/120x60?text=Patagonia' },
+  { name: 'Palace', logo: 'https://via.placeholder.com/120x60?text=Palace' },
+  { name: 'Dickies', logo: 'https://via.placeholder.com/120x60?text=Dickies' },
+  { name: 'The North Face', logo: 'https://via.placeholder.com/120x60?text=TNF' },
+];
+
+export const featuredCollections = [
+  {
+    id: 1,
+    title: 'New Arrivals',
+    subtitle: 'Fresh drops every week',
+    image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=800&h=500&fit=crop',
+    link: '#new-arrivals'
+  },
+  {
+    id: 2,
+    title: 'Skate Essentials',
+    subtitle: 'Everything for your setup',
+    image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=500&fit=crop',
+    link: '#skate'
+  },
+  {
+    id: 3,
+    title: 'Winter Sale',
+    subtitle: 'Up to 50% off',
+    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=500&fit=crop',
+    link: '#sale'
+  },
+];
+
+// Utility function for formatting price
+export const formatPrice = (price) => `${price.toFixed(2).replace('.', ',')} TND`;

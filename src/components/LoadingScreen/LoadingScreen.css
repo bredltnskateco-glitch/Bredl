@@ -1,0 +1,306 @@
+/* Loading Screen Wrapper */
+.loading-screen-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: all;
+}
+
+.loading-screen-wrapper.complete {
+  pointer-events: none;
+}
+
+/* Main Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.loading-screen-wrapper.shrinking .loading-overlay,
+.loading-screen-wrapper.complete .loading-overlay {
+  transform: translateY(-100%);
+}
+
+/* Content Container */
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Logo Container */
+.loading-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Main Logo */
+.loading-logo {
+  overflow: hidden;
+  position: relative;
+}
+
+.loading-logo .logo-image {
+  display: block;
+  height: clamp(150px, 30vw, 280px);
+  width: auto;
+  object-fit: contain;
+  opacity: 0;
+  transform: translateY(100%);
+  animation: logoReveal 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+.logo-text {
+  display: block;
+  font-size: clamp(2rem, 8vw, 5rem);
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(100%);
+  animation: logoReveal 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes logoReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animated Line Under Logo */
+.loading-line {
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  animation: lineExpand 1s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation-delay: 0.6s;
+}
+
+@keyframes lineExpand {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Logo scale animation during expanding phase */
+.loading-screen-wrapper.expanding .logo-text,
+.loading-screen-wrapper.expanding .logo-image {
+  animation: logoScale 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@keyframes logoScale {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Transitioning phase - logo moves to navbar position */
+.loading-screen-wrapper.transitioning .loading-logo-container {
+  animation: moveToNavbar 1s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.loading-screen-wrapper.transitioning .logo-image {
+  animation: shrinkToNavbar 1s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.loading-screen-wrapper.transitioning .loading-line {
+  animation: fadeOutLine 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@keyframes moveToNavbar {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(calc(-50vw + 120px), calc(-50vh + 60px));
+  }
+}
+
+@keyframes shrinkToNavbar {
+  0% {
+    height: clamp(150px, 30vw, 280px);
+  }
+  100% {
+    height: 70px;
+  }
+}
+
+@keyframes fadeOutLine {
+  0% {
+    opacity: 1;
+    width: 100%;
+  }
+  100% {
+    opacity: 0;
+    width: 0;
+  }
+}
+
+.loading-screen-wrapper.expanding .loading-line {
+  animation: linePulse 0.8s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@keyframes linePulse {
+  0% {
+    opacity: 1;
+    width: 100%;
+  }
+  50% {
+    opacity: 0.5;
+    width: 120%;
+  }
+  100% {
+    opacity: 1;
+    width: 100%;
+  }
+}
+
+/* Reveal Panels (curtain effect) */
+.loading-reveal-top,
+.loading-reveal-bottom {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #0a0a0a;
+  z-index: 5;
+  transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.loading-reveal-top {
+  top: 0;
+  transform-origin: top;
+}
+
+.loading-reveal-bottom {
+  bottom: 0;
+  transform-origin: bottom;
+}
+
+.loading-screen-wrapper.shrinking .loading-reveal-top {
+  transform: translateY(-100%);
+}
+
+.loading-screen-wrapper.shrinking .loading-reveal-bottom {
+  transform: translateY(100%);
+}
+
+.loading-screen-wrapper.complete .loading-reveal-top,
+.loading-screen-wrapper.complete .loading-reveal-bottom {
+  transform: translateY(-100%);
+}
+
+.loading-screen-wrapper.complete .loading-reveal-bottom {
+  transform: translateY(100%);
+}
+
+/* Complete State - Hide Everything */
+.loading-screen-wrapper.complete {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition-delay: 0.5s;
+}
+
+/* Optional: Add subtle grain texture */
+.loading-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* Progress indicator (optional subtle element) */
+.loading-logo-container::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0;
+  animation: dotPulse 1.5s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1.5);
+  }
+}
+
+.loading-screen-wrapper.shrinking .loading-logo-container::after,
+.loading-screen-wrapper.complete .loading-logo-container::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo-text {
+    font-size: clamp(1.5rem, 10vw, 3rem);
+    letter-spacing: 0.2em;
+  }
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo-text,
+  .loading-line,
+  .loading-overlay,
+  .loading-reveal-top,
+  .loading-reveal-bottom,
+  .loading-screen-wrapper.complete {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
