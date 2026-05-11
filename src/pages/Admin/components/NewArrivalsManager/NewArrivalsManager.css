@@ -374,12 +374,52 @@
         max-width: none;
     }
 
+    .add-btn {
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    .arrivals-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .modal-header {
+        padding: 16px;
+    }
+
+    .modal-content form {
+        padding: 16px;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-cancel,
+    .btn-save {
+        flex: none;
+        width: 100%;
+        padding: 14px;
+    }
+
     .form-row {
         grid-template-columns: 1fr;
     }
 
     .form-row.checkboxes {
         flex-direction: column;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .arrivals-grid {
+        grid-template-columns: repeat(2, 1fr);
         gap: 12px;
     }
 }

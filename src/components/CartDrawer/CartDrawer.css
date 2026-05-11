@@ -485,6 +485,41 @@
   transform: translateX(4px);
 }
 
+.checkout-btn.success {
+  background: #28a745;
+  color: #fff;
+}
+
+.checkout-btn.processing {
+  background: #555;
+  color: #fff;
+}
+
+.checkout-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.checkout-error {
+  margin: 0 0 12px 0;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  color: #ff8b8b;
+  background: rgba(255, 100, 100, 0.08);
+  border: 1px solid rgba(255, 100, 100, 0.2);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.promo-message {
+  margin: 8px 0 0 0;
+  font-size: 0.78rem;
+  color: #aaa;
+  text-align: center;
+}
+
 /* Continue Button */
 .continue-btn {
   display: block;
@@ -568,45 +603,109 @@
 .cart-item:nth-child(5) { animation-delay: 0.25s; }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .cart-drawer {
     max-width: 100%;
   }
 
   .cart-header {
-    padding: 20px;
+    padding: 18px 20px;
   }
 
   .cart-header h2 {
-    font-size: 1rem;
+    font-size: 0.95rem;
     letter-spacing: 1px;
   }
 
+  .cart-close-btn {
+    width: 36px;
+    height: 36px;
+  }
+
   .cart-item {
-    padding: 16px 20px;
-    gap: 16px;
+    padding: 16px 18px;
+    gap: 14px;
   }
 
   .cart-item-image {
-    width: 80px;
-    height: 100px;
+    width: 78px;
+    height: 96px;
+    flex-shrink: 0;
   }
 
   .cart-item-name {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cart-item-variants {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .cart-item-price {
+    font-size: 0.92rem;
   }
 
   .cart-footer {
-    padding: 20px;
+    padding: 18px 20px 20px;
+  }
+
+  .promo-input-wrapper {
+    flex-direction: column;
+  }
+
+  .promo-apply-btn {
+    padding: 10px;
   }
 
   .checkout-btn {
     padding: 16px 20px;
     font-size: 0.8rem;
+    letter-spacing: 1.5px;
+  }
+
+  .continue-btn {
+    padding: 14px;
   }
 
   .trust-badges {
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px 18px;
+    justify-content: space-evenly;
+  }
+
+  .cart-empty {
+    padding: 50px 28px;
+  }
+
+  .cart-empty-icon {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+@media (max-width: 380px) {
+  .cart-item {
+    padding: 14px 16px;
+  }
+
+  .cart-item-image {
+    width: 70px;
+    height: 88px;
+  }
+
+  .qty-btn {
+    padding: 8px 11px;
+  }
+
+  .remove-item-btn {
+    padding: 8px;
   }
 }

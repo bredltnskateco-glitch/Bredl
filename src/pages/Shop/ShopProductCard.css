@@ -7,6 +7,13 @@
   text-decoration: none;
   color: inherit;
   display: block;
+  background: none;
+  border: 0;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
 }
 
 .product-image-wrapper {
@@ -276,32 +283,92 @@
 /* Responsive */
 @media (max-width: 768px) {
   .product-quick-actions {
-    display: none;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    position: static;
+    padding: 10px 0 0;
   }
-  
+
+  .quick-action-btn {
+    padding: 10px;
+    font-size: 0.75rem;
+  }
+
+  .quick-action-btn:first-child {
+    border-bottom: 1px solid #e0e0e0;
+  }
+
   .wishlist-btn {
     opacity: 1;
     transform: scale(1) translateY(0);
     width: 38px;
     height: 38px;
   }
-  
+
   .products-grid.list .shop-product-card {
-    grid-template-columns: 150px 1fr;
-    gap: 15px;
+    grid-template-columns: 140px 1fr;
+    gap: 14px;
+  }
+
+  .product-info {
+    padding: 12px 0 0;
+  }
+
+  .product-brand {
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+  }
+
+  .product-name {
+    font-size: 0.9rem;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+
+  .product-prices {
+    font-size: 0.9rem;
+  }
+
+  .regular-price,
+  .sale-price {
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
   .product-name {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
-  
+
+  .badge {
+    padding: 4px 8px;
+    font-size: 0.6rem;
+    top: 10px;
+    left: 10px;
+  }
+
+  .badge-sale {
+    right: 10px;
+  }
+
+  .wishlist-btn {
+    width: 34px;
+    height: 34px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .wishlist-btn svg {
+    font-size: 1rem;
+  }
+
   .products-grid.list .shop-product-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: 110px 1fr;
+    gap: 12px;
   }
-  
-  .products-grid.list .product-image-wrapper {
-    aspect-ratio: 16/9;
+
+  .products-grid.list .product-name {
+    font-size: 0.92rem;
   }
 }

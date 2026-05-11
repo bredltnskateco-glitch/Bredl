@@ -450,21 +450,21 @@ export const featuredCollections = [
     title: 'New Arrivals',
     subtitle: 'Fresh drops every week',
     image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=800&h=500&fit=crop',
-    link: '#new-arrivals'
+    to: '/shop',
   },
   {
     id: 2,
     title: 'Skate Essentials',
     subtitle: 'Everything for your setup',
     image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=500&fit=crop',
-    link: '#skate'
+    to: '/shop/skate',
   },
   {
     id: 3,
     title: 'Winter Sale',
     subtitle: 'Up to 50% off',
     image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=500&fit=crop',
-    link: '#sale'
+    to: '/shop?sort=sale',
   },
 ];
 

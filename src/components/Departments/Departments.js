@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Departments.css';
 
 const Departments = () => {
@@ -7,25 +8,25 @@ const Departments = () => {
       id: 1,
       name: 'HARDWARE',
       image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=600&h=700&fit=crop',
-      link: '#hardware'
+      to: '/shop/skate'
     },
     {
       id: 2,
       name: 'SHOES',
       image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=700&fit=crop',
-      link: '#shoes'
+      to: '/shop/shoes'
     },
     {
       id: 3,
       name: 'SOFT GOODS',
       image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&h=700&fit=crop',
-      link: '#soft-goods'
+      to: '/shop/streetwear'
     },
     {
       id: 4,
       name: 'ACCESSORIES',
       image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=700&fit=crop',
-      link: '#accessories'
+      to: '/shop/accessories'
     }
   ];
 
@@ -35,22 +36,24 @@ const Departments = () => {
         <h2 className="section-title">DEPARTMENTS</h2>
         <div className="departments-grid">
           {departments.map((dept) => (
-            <a 
-              key={dept.id} 
-              href={dept.link} 
+            <Link
+              key={dept.id}
+              to={dept.to}
               className="department-card"
+              aria-label={`Shop ${dept.name}`}
             >
               <div className="department-image-wrapper">
-                <img 
-                  src={dept.image} 
+                <img
+                  src={dept.image}
                   alt={dept.name}
                   className="department-image"
+                  loading="lazy"
                 />
                 <div className="department-overlay">
                   <h3 className="department-name">{dept.name}</h3>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

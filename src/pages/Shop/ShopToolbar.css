@@ -3,15 +3,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 30px;
+  gap: 16px;
+  padding-bottom: 24px;
   border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
 }
 
 .toolbar-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
+  flex-wrap: wrap;
 }
 
 .filter-toggle {
@@ -27,6 +30,7 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 44px;
 }
 
 .filter-toggle:hover {
@@ -42,19 +46,21 @@
 .toolbar-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .sort-dropdown {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   position: relative;
 }
 
 .sort-dropdown label {
   font-size: 0.85rem;
   color: #666;
+  white-space: nowrap;
 }
 
 .sort-dropdown select {
@@ -64,7 +70,8 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  padding-right: 20px;
+  padding-right: 24px;
+  min-height: 44px;
 }
 
 .dropdown-icon {
@@ -87,6 +94,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .view-btn.active,
@@ -100,12 +109,43 @@
 @media (max-width: 768px) {
   .shop-toolbar {
     flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 14px;
   }
-  
+
+  .toolbar-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .filter-toggle {
+    flex: 1;
+    justify-content: center;
+  }
+
   .toolbar-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .sort-dropdown label {
+    display: none;
+  }
+
+  .sort-dropdown select {
+    background: #f5f5f5;
+    padding: 8px 28px 8px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  .dropdown-icon {
+    right: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .view-btn {
+    padding: 8px;
   }
 }

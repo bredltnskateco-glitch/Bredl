@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiX, FiHeart, FiTrash2, FiShoppingBag } from 'react-icons/fi';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
@@ -6,14 +7,15 @@ import { formatPrice } from '../../pages/Shop/shopData';
 import './Wishlist.css';
 
 const Wishlist = () => {
-  const { 
-    wishlistItems, 
-    isWishlistOpen, 
-    closeWishlist, 
+  const {
+    wishlistItems,
+    isWishlistOpen,
+    closeWishlist,
     removeFromWishlist,
-    clearWishlist 
+    clearWishlist,
   } = useWishlist();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleMoveToCart = (product) => {
     addToCart(product);
@@ -21,8 +23,13 @@ const Wishlist = () => {
   };
 
   const handleMoveAllToCart = () => {
-    wishlistItems.forEach(item => addToCart(item));
+    wishlistItems.forEach((item) => addToCart(item));
     clearWishlist();
+  };
+
+  const handleStartShopping = () => {
+    closeWishlist();
+    navigate('/shop');
   };
 
   return (
@@ -52,8 +59,8 @@ const Wishlist = () => {
               <FiHeart className="empty-icon" />
               <h3>Your wishlist is empty</h3>
               <p>Save items you love by clicking the heart icon</p>
-              <button className="continue-shopping-btn" onClick={closeWishlist}>
-                Continue Shopping
+              <button type="button" className="continue-shopping-btn" onClick={handleStartShopping}>
+                Start Shopping
               </button>
             </div>
           ) : (

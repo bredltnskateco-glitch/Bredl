@@ -1,5 +1,5 @@
 .newsletter {
-  padding: 80px 20px;
+  padding: clamp(48px, 7vw, 80px) clamp(16px, 4vw, 20px);
   background: #000;
   color: #fff;
 }
@@ -11,17 +11,19 @@
 }
 
 .newsletter-title {
-  font-size: 32px;
+  font-size: clamp(22px, 4vw, 32px);
   font-weight: 800;
   margin-bottom: 15px;
   letter-spacing: 1px;
+  line-height: 1.2;
 }
 
 .newsletter-subtitle {
-  font-size: 14px;
+  font-size: clamp(13px, 1.4vw, 14px);
   color: #aaa;
-  margin-bottom: 35px;
+  margin-bottom: 30px;
   line-height: 1.6;
+  padding: 0 8px;
 }
 
 .newsletter-form {
@@ -33,13 +35,14 @@
 
 .newsletter-input {
   flex: 1;
-  padding: 15px 20px;
+  padding: 15px 18px;
   font-size: 14px;
   border: 1px solid #333;
   background: transparent;
   color: #fff;
   outline: none;
   transition: border-color 0.3s;
+  min-width: 0;
 }
 
 .newsletter-input::placeholder {
@@ -53,12 +56,14 @@
 .newsletter-btn {
   background: #fff;
   color: #000;
-  padding: 15px 30px;
+  padding: 15px 28px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1px;
   border: 1px solid #fff;
   transition: background-color 0.3s, color 0.3s;
+  min-height: 48px;
+  white-space: nowrap;
 }
 
 .newsletter-btn:hover {
@@ -67,21 +72,18 @@
 }
 
 /* Responsive Styles */
-@media (max-width: 768px) {
-  .newsletter {
-    padding: 60px 15px;
-  }
-
-  .newsletter-title {
-    font-size: 24px;
-  }
-
+@media (max-width: 560px) {
   .newsletter-form {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
+  }
+
+  .newsletter-input {
+    padding: 14px 16px;
   }
 
   .newsletter-btn {
     width: 100%;
+    padding: 14px;
   }
 }

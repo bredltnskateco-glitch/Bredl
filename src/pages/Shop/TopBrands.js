@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { topBrands } from './shopData';
 import './TopBrands.css';
 
@@ -9,9 +10,13 @@ const TopBrands = () => {
         <h2 className="section-title">TOP BRANDS</h2>
         <div className="brands-grid">
           {topBrands.map((brand, index) => (
-            <a key={index} href={`#brand-${brand.name}`} className="brand-item">
+            <Link
+              key={index}
+              to={`/shop?brand=${encodeURIComponent(brand.name.toLowerCase().replace(/\s+/g, '-'))}`}
+              className="brand-item"
+            >
               <span>{brand.name}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

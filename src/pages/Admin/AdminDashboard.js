@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -23,10 +23,44 @@ import MfaPanel from './components/MfaPanel/MfaPanel';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth > 768;
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth > 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    if (sidebarOpen && window.innerWidth <= 768) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+    return undefined;
+  }, [sidebarOpen]);
+
+  const handleTabChange = (id) => {
+    setActiveTab(id);
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -76,14 +110,21 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-layout">
+    <div className={`admin-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      {/* Mobile sidebar backdrop */}
+      <div
+        className="admin-sidebar-backdrop"
+        onClick={() => setSidebarOpen(false)}
+        aria-hidden={!sidebarOpen}
+      />
+
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         menuItems={menuItems}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         user={user}
         onLogout={handleLogout}
       />

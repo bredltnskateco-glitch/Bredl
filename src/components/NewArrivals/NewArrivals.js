@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import ProductCard from '../ProductCard/ProductCard';
 import { newArrivalsApi } from '../../api';
 import './NewArrivals.css';
@@ -53,9 +54,9 @@ const NewArrivals = () => {
         )}
 
         <div className="section-cta">
-          <a href="#rufus-collection" className="btn-primary">
+          <Link to="/shop" className="btn-primary">
             BREDL COLLECTION
-          </a>
+          </Link>
         </div>
       </div>
     </section>

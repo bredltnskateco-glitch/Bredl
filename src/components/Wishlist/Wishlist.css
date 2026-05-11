@@ -444,21 +444,54 @@
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .wishlist-drawer {
     width: 100%;
   }
-  
-  .wishlist-item {
-    padding: 16px 20px;
-    margin: 0 8px 8px;
-  }
-  
+
   .wishlist-header {
-    padding: 20px;
+    padding: 18px 20px;
   }
-  
+
+  .wishlist-title h2 {
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+  }
+
+  .wishlist-close {
+    width: 36px;
+    height: 36px;
+  }
+
+  .wishlist-item {
+    padding: 14px 16px;
+    margin: 0 8px 8px;
+    gap: 14px;
+  }
+
+  .wishlist-item-image {
+    width: 76px;
+    height: 92px;
+  }
+
+  .wishlist-item-name {
+    font-size: 0.88rem;
+  }
+
+  .wishlist-item-actions button {
+    width: 36px;
+    height: 36px;
+  }
+
   .wishlist-footer {
-    padding: 20px;
+    padding: 18px 20px;
+  }
+
+  .wishlist-empty {
+    padding: 50px 28px;
+  }
+
+  .wishlist-empty .empty-icon {
+    font-size: 4rem;
   }
 }

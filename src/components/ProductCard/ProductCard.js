@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import QuickView from '../QuickView/QuickView';
+import { FiHeart } from 'react-icons/fi';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
@@ -9,6 +11,8 @@ const ProductCard = ({ product }) => {
   const [isAdded, setIsAdded] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const inWishlist = isInWishlist(product.id);
 
   const formatPrice = (price) => {
     return `${price.toFixed(2).replace('.', ',')} TND`;
@@ -65,18 +69,32 @@ const ProductCard = ({ product }) => {
 
   const specs = getProductSpecs();
 
+  const openQuickView = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setShowQuickView(true);
+  };
+
   return (
-    <article 
+    <article
       className="product-card"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <a href={`#product-${product.id}`} className="product-link">
+      <button
+        type="button"
+        className="product-link"
+        onClick={openQuickView}
+        aria-label={`Quick view ${product.name}`}
+      >
         <div className="product-image-wrapper">
-          <img 
+          <img
             src={isHovered && product.hoverImage ? product.hoverImage : product.image}
             alt={product.name}
             className="product-image"
+            loading="lazy"
           />
           {product.isOnSale && (
             <span className="sale-badge">SALE</span>
@@ -84,19 +102,29 @@ const ProductCard = ({ product }) => {
           {product.isNew && (
             <span className="new-badge">NEW</span>
           )}
+          <button
+            type="button"
+            className={`product-wishlist-btn ${inWishlist ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleWishlist(product);
+            }}
+            aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <FiHeart />
+          </button>
           <div className="product-actions">
-            <button 
+            <button
               className="quick-view-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowQuickView(true);
-              }}
+              type="button"
+              onClick={openQuickView}
             >
-              Quick View
+              <span>Quick View</span>
             </button>
-            <button 
+            <button
               className={`quick-add-btn ${isAdding ? 'adding' : ''} ${isAdded ? 'added' : ''}`}
+              type="button"
               onClick={handleQuickAdd}
               disabled={isAdding}
             >
@@ -130,9 +158,9 @@ const ProductCard = ({ product }) => {
             )}
           </div>
         </div>
-      </a>
-      
-      <QuickView 
+      </button>
+
+      <QuickView
         product={product}
         isOpen={showQuickView}
         onClose={() => setShowQuickView(false)}

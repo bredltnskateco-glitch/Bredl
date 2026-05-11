@@ -30,6 +30,7 @@ const NewsManager = () => {
         date: '',
         image: '',
         link: '',
+        body: '',
         featured: false
     });
 
@@ -37,11 +38,12 @@ const NewsManager = () => {
         if (item) {
             setEditingItem(item);
             setFormData({
-                title: item.title,
-                date: item.date,
-                image: item.image,
-                link: item.link,
-                featured: item.featured
+                title: item.title || '',
+                date: item.date || '',
+                image: item.image || '',
+                link: item.link || '',
+                body: item.body || '',
+                featured: !!item.featured
             });
         } else {
             setEditingItem(null);
@@ -55,6 +57,7 @@ const NewsManager = () => {
                 date: today,
                 image: '',
                 link: '',
+                body: '',
                 featured: false
             });
         }
@@ -77,10 +80,11 @@ const NewsManager = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const itemData = {
-            title: formData.title,
-            date: formData.date,
-            image: formData.image,
-            link: formData.link,
+            title: formData.title.trim(),
+            date: formData.date.trim(),
+            image: formData.image.trim(),
+            link: formData.link.trim(),
+            body: formData.body,
             featured: formData.featured
         };
 
@@ -170,9 +174,13 @@ const NewsManager = () => {
                                         <img src={item.image} alt={item.title} className="article-thumb" />
                                         <div className="article-info">
                                             <span className="article-title">{item.title}</span>
-                                            <a href={item.link} className="article-link" target="_blank" rel="noopener noreferrer">
-                                                {item.link}
-                                            </a>
+                                            {item.link ? (
+                                                <a href={item.link} className="article-link" target="_blank" rel="noopener noreferrer">
+                                                    {item.link}
+                                                </a>
+                                            ) : (
+                                                <span className="article-link muted">In-app article</span>
+                                            )}
                                         </div>
                                     </div>
                                 </td>
@@ -236,14 +244,13 @@ const NewsManager = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Link</label>
+                                    <label>Link (optional)</label>
                                     <input
                                         type="text"
                                         name="link"
                                         value={formData.link}
                                         onChange={handleInputChange}
-                                        placeholder="#news-slug"
-                                        required
+                                        placeholder="https://... or leave empty for in-app article"
                                     />
                                 </div>
                             </div>
@@ -255,6 +262,16 @@ const NewsManager = () => {
                                     value={formData.image}
                                     onChange={handleInputChange}
                                     required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Article body (optional)</label>
+                                <textarea
+                                    name="body"
+                                    value={formData.body}
+                                    onChange={handleInputChange}
+                                    rows={5}
+                                    placeholder="Shown in the in-app article modal when no external link is provided."
                                 />
                             </div>
                             <div className="form-group checkbox-group">

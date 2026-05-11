@@ -2,7 +2,7 @@
 .shop-hero {
   background: #000;
   color: #fff;
-  padding: 80px 20px;
+  padding: clamp(50px, 8vw, 80px) clamp(16px, 4vw, 20px);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -27,41 +27,21 @@
 }
 
 .shop-hero h1 {
-  font-size: 5rem;
+  font-size: clamp(2rem, 7vw, 5rem);
   font-weight: 900;
-  letter-spacing: 0.3em;
-  margin: 0 0 20px;
+  letter-spacing: clamp(0.15em, 0.3vw, 0.3em);
+  margin: 0 0 16px;
   text-transform: uppercase;
+  line-height: 1.05;
+  word-break: break-word;
 }
 
 .shop-hero p {
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
   font-weight: 300;
-  letter-spacing: 0.1em;
-  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.75);
   margin: 0;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .shop-hero h1 {
-    font-size: 3.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .shop-hero {
-    padding: 50px 20px;
-  }
-  
-  .shop-hero h1 {
-    font-size: 2.5rem;
-    letter-spacing: 0.2em;
-  }
-}
-
-@media (max-width: 480px) {
-  .shop-hero h1 {
-    font-size: 2rem;
-  }
+  padding: 0 4px;
+  line-height: 1.5;
 }

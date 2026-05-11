@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { FiX, FiHeart, FiShare2, FiChevronLeft, FiChevronRight, FiCheck, FiShoppingCart, FiTruck, FiRefreshCw, FiShield } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiX, FiHeart, FiChevronLeft, FiChevronRight, FiCheck, FiShoppingCart, FiTruck, FiRefreshCw, FiShield } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import './QuickView.css';
 
 const QuickView = ({ product, isOpen, onClose }) => {
@@ -11,9 +13,12 @@ const QuickView = ({ product, isOpen, onClose }) => {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  
+
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const navigate = useNavigate();
+  const productKey = product?.id || product?._id;
+  const isWishlisted = productKey ? isInWishlist(productKey) : false;
 
   // Reset state when product changes
   useEffect(() => {
@@ -265,9 +270,11 @@ const QuickView = ({ product, isOpen, onClose }) => {
                 )}
               </button>
 
-              <button 
+              <button
                 className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
-                onClick={() => setIsWishlisted(!isWishlisted)}
+                onClick={() => toggleWishlist(product)}
+                aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                type="button"
               >
                 <FiHeart size={20} />
               </button>
@@ -296,7 +303,18 @@ const QuickView = ({ product, isOpen, onClose }) => {
               </div>
             )}
 
-            <button className="view-full-details">
+            <button
+              type="button"
+              className="view-full-details"
+              onClick={() => {
+                onClose();
+                if (product.category) {
+                  navigate(`/shop/${product.category}`);
+                } else {
+                  navigate('/shop');
+                }
+              }}
+            >
               View Full Details
             </button>
           </div>

@@ -63,11 +63,14 @@
     border: 1px solid #333;
     border-radius: 12px;
     overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .news-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 640px;
 }
 
 .news-table thead {
@@ -139,6 +142,16 @@
 
 .article-link:hover {
     color: #888;
+}
+
+.article-link.muted {
+    color: #555;
+    font-style: italic;
+    cursor: default;
+}
+
+.article-link.muted:hover {
+    color: #555;
 }
 
 .date-cell {
@@ -274,7 +287,8 @@
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
     padding: 12px;
     background: #252525;
@@ -285,10 +299,18 @@
     outline: none;
     transition: border-color 0.2s;
     box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.5;
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
     border-color: #555;
 }
 
@@ -369,9 +391,32 @@
         max-width: none;
     }
 
-    .news-table {
-        display: block;
-        overflow-x: auto;
+    .add-btn {
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    .modal-overlay {
+        padding: 12px;
+    }
+
+    .modal-header {
+        padding: 16px;
+    }
+
+    .modal-content form {
+        padding: 16px;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-cancel,
+    .btn-save {
+        flex: none;
+        width: 100%;
+        padding: 14px;
     }
 
     .form-row {
@@ -379,6 +424,6 @@
     }
 
     .article-cell {
-        min-width: 250px;
+        min-width: 240px;
     }
 }

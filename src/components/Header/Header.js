@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMenu, FiX, FiUser, FiShoppingBag, FiHeart, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiShoppingBag, FiHeart, FiLogOut, FiSettings, FiChevronDown } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -10,13 +10,30 @@ const Header = ({ isVisible = true }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState(null);
   const dropdownTimeoutRef = useRef(null);
   const userDropdownTimeoutRef = useRef(null);
-  
+
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const { openCart, getCartItemsCount } = useCart();
   const { openWishlist, wishlistCount } = useWishlist();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (menuOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+    return undefined;
+  }, [menuOpen]);
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setMobileExpanded(null);
+  };
   
   const cartItemsCount = getCartItemsCount();
 
@@ -149,71 +166,110 @@ const Header = ({ isVisible = true }) => {
     <header className={`header ${isVisible ? 'header-visible' : 'header-hidden'}`}>
       <div className="header-container">
         <div className="logo">
-          <Link to="/">
+          <Link to="/" onClick={closeMenu}>
             <img src="/Logo.png" alt="Rufus Macba" className="logo-image" />
           </Link>
         </div>
 
-        <button 
-          className="menu-toggle"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
+        <button
+          className={`menu-toggle ${menuOpen ? 'open' : ''}`}
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
         >
           {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
 
-        <nav className={`nav ${menuOpen ? 'nav-open' : ''}`}>
+        {menuOpen && (
+          <div
+            className="nav-backdrop"
+            onClick={closeMenu}
+            aria-hidden="true"
+          />
+        )}
+
+        <nav className={`nav ${menuOpen ? 'nav-open' : ''}`} aria-label="Primary">
           <ul className="nav-list">
-            {navItems.map((item, index) => (
-              <li 
-                key={index} 
-                className={`nav-item ${activeDropdown === index ? 'dropdown-active' : ''}`}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-              >
-                <Link to={item.link || '/shop'} className={`nav-link ${item.isSale ? 'sale-link' : ''}`}>
-                  <RollingText text={item.name} />
-                </Link>
-                {item.dropdown && activeDropdown === index && (
-                  <div 
-                    className="mega-dropdown"
-                    onMouseEnter={() => handleMouseEnter(index)}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <div className="dropdown-inner">
-                      <div className="dropdown-column">
-                        <h4 className="dropdown-title">Categories</h4>
-                        <ul className="dropdown-list">
-                          {item.dropdown.categories.map((cat, catIndex) => (
-                            <li key={catIndex}>
-                              <Link to={`/shop/${cat.toLowerCase().replace(/\s+/g, '-')}`}>{cat}</Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="dropdown-column">
-                        <h4 className="dropdown-title">Top Brands</h4>
-                        <ul className="dropdown-list">
-                          {item.dropdown.brands.map((brand, brandIndex) => (
-                            <li key={brandIndex}>
-                              <Link to={`/shop?brand=${brand.toLowerCase().replace(/\s+/g, '-')}`}>{brand}</Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="dropdown-column dropdown-featured">
-                        <div className="featured-box">
-                          <span className="featured-label">{item.dropdown.featured}</span>
-                          <Link to={`/shop`} className="featured-link">
-                            Shop Now →
-                          </Link>
+            {navItems.map((item, index) => {
+              const isExpanded = mobileExpanded === index;
+              return (
+                <li
+                  key={index}
+                  className={`nav-item ${activeDropdown === index ? 'dropdown-active' : ''} ${isExpanded ? 'mobile-expanded' : ''}`}
+                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <div className="nav-link-row">
+                    <Link
+                      to={item.link || '/shop'}
+                      className={`nav-link ${item.isSale ? 'sale-link' : ''}`}
+                      onClick={closeMenu}
+                    >
+                      <RollingText text={item.name} />
+                    </Link>
+                    {item.dropdown && (
+                      <button
+                        type="button"
+                        className={`nav-expand ${isExpanded ? 'open' : ''}`}
+                        onClick={() => setMobileExpanded(isExpanded ? null : index)}
+                        aria-label={`Toggle ${item.name} subnav`}
+                        aria-expanded={isExpanded}
+                      >
+                        <FiChevronDown />
+                      </button>
+                    )}
+                  </div>
+                  {item.dropdown && (activeDropdown === index || isExpanded) && (
+                    <div
+                      className="mega-dropdown"
+                      onMouseEnter={() => handleMouseEnter(index)}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <div className="dropdown-inner">
+                        <div className="dropdown-column">
+                          <h4 className="dropdown-title">Categories</h4>
+                          <ul className="dropdown-list">
+                            {item.dropdown.categories.map((cat, catIndex) => (
+                              <li key={catIndex}>
+                                <Link
+                                  to={`/shop/${cat.toLowerCase().replace(/\s+/g, '-')}`}
+                                  onClick={closeMenu}
+                                >
+                                  {cat}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="dropdown-column">
+                          <h4 className="dropdown-title">Top Brands</h4>
+                          <ul className="dropdown-list">
+                            {item.dropdown.brands.map((brand, brandIndex) => (
+                              <li key={brandIndex}>
+                                <Link
+                                  to={`/shop?brand=${brand.toLowerCase().replace(/\s+/g, '-')}`}
+                                  onClick={closeMenu}
+                                >
+                                  {brand}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="dropdown-column dropdown-featured">
+                          <div className="featured-box">
+                            <span className="featured-label">{item.dropdown.featured}</span>
+                            <Link to={`/shop`} className="featured-link" onClick={closeMenu}>
+                              Shop Now →
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </li>
-            ))}
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
@@ -245,28 +301,45 @@ const Header = ({ isVisible = true }) => {
                     <span className="user-email">{user?.email}</span>
                   </div>
                   <div className="user-dropdown-menu">
-                    <Link to="/account" className="user-dropdown-item">
-                      <FiUser size={16} />
-                      My Account
-                    </Link>
-                    {isAdmin() && (
-                      <Link to="/admin" className="user-dropdown-item admin-link">
+                    {isAdmin() ? (
+                      <Link
+                        to="/admin"
+                        className="user-dropdown-item admin-link"
+                        onClick={() => setUserDropdownOpen(false)}
+                      >
                         <FiSettings size={16} />
                         Admin Dashboard
                       </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        className="user-dropdown-item"
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          openCart();
+                        }}
+                      >
+                        <FiShoppingBag size={16} />
+                        View Cart
+                      </button>
                     )}
-                    <Link to="/orders" className="user-dropdown-item">
-                      <FiShoppingBag size={16} />
-                      My Orders
-                    </Link>
-                    <Link to="/account/settings" className="user-dropdown-item">
-                      <FiSettings size={16} />
-                      Settings
-                    </Link>
-                    <button 
+                    <button
+                      type="button"
+                      className="user-dropdown-item"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        openWishlist();
+                      }}
+                    >
+                      <FiHeart size={16} />
+                      My Wishlist
+                    </button>
+                    <button
+                      type="button"
                       className="user-dropdown-item logout"
                       onClick={() => {
                         logout();
+                        setUserDropdownOpen(false);
                         navigate('/');
                       }}
                     >

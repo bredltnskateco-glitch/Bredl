@@ -1,28 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FiInstagram, FiFacebook, FiTwitter, FiYoutube } from 'react-icons/fi';
+import { newsletterApi } from '../../api';
 import './Footer.css';
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle');
+  const [message, setMessage] = useState('');
+
   const footerLinks = {
     enlaces: [
-      { name: 'POLICY', link: '#policy' },
-      { name: 'OUR STORE', link: '#store' },
-      { name: 'SEARCH', link: '#search' },
+      { name: 'POLICY', to: '/shop' },
+      { name: 'OUR STORE', to: '/shop' },
+      { name: 'SEARCH', to: '/shop' },
     ],
     brands: [
-      { name: 'BREDL', link: '#BREDL' },
-      { name: 'NIKE SB', link: '#nike-sb' },
-      { name: 'ADIDAS', link: '#adidas' },
-      { name: 'VANS PRO', link: '#vans' },
-      { name: 'PALACE', link: '#palace' },
+      { name: 'BREDL', to: '/shop?brand=bredl' },
+      { name: 'NIKE SB', to: '/shop?brand=nike-sb' },
+      { name: 'ADIDAS', to: '/shop?brand=adidas' },
+      { name: 'VANS PRO', to: '/shop?brand=vans' },
+      { name: 'PALACE', to: '/shop?brand=palace' },
     ],
     categories: [
-      { name: 'NEW ARRIVALS', link: '#new-arrivals' },
-      { name: 'CLOTHING', link: '#clothing' },
-      { name: 'SHOES', link: '#shoes' },
-      { name: 'HARDWARE', link: '#hardware' },
-      { name: 'SALES', link: '#sales' },
+      { name: 'NEW ARRIVALS', to: '/shop' },
+      { name: 'CLOTHING', to: '/shop/streetwear' },
+      { name: 'SHOES', to: '/shop/shoes' },
+      { name: 'HARDWARE', to: '/shop/skate' },
+      { name: 'SALES', to: '/shop' },
     ],
+  };
+
+  const social = [
+    { Icon: FiInstagram, label: 'Instagram', href: 'https://www.instagram.com' },
+    { Icon: FiFacebook, label: 'Facebook', href: 'https://www.facebook.com' },
+    { Icon: FiTwitter, label: 'Twitter', href: 'https://twitter.com' },
+    { Icon: FiYoutube, label: 'YouTube', href: 'https://www.youtube.com' },
+  ];
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus('loading');
+    setMessage('');
+    try {
+      await newsletterApi.subscribe(email.trim());
+      setStatus('success');
+      setMessage('Subscribed — check your inbox.');
+      setEmail('');
+    } catch (err) {
+      setStatus('error');
+      setMessage(err.message || 'Subscription failed. Please try again.');
+    }
   };
 
   return (
@@ -32,32 +61,32 @@ const Footer = () => {
           <div className="footer-brand">
             <h2 className="footer-logo">BREDL</h2>
             <p className="footer-description">
-              Your local skate shop in Barcelona since 2010. 
+              Your local skate shop in Barcelona since 2010.
               Premium skate gear, shoes, and clothing from the best brands.
             </p>
             <div className="footer-social">
-              <a href="#instagram" className="social-link" aria-label="Instagram">
-                <FiInstagram size={20} />
-              </a>
-              <a href="#facebook" className="social-link" aria-label="Facebook">
-                <FiFacebook size={20} />
-              </a>
-              <a href="#twitter" className="social-link" aria-label="Twitter">
-                <FiTwitter size={20} />
-              </a>
-              <a href="#youtube" className="social-link" aria-label="YouTube">
-                <FiYoutube size={20} />
-              </a>
+              {social.map(({ Icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  className="social-link"
+                  aria-label={label}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon size={20} />
+                </a>
+              ))}
             </div>
           </div>
 
           <div className="footer-links">
             <div className="footer-column">
-              <h3 className="footer-heading">Enlaces</h3>
+              <h3 className="footer-heading">Links</h3>
               <ul className="footer-list">
                 {footerLinks.enlaces.map((item, index) => (
                   <li key={index}>
-                    <a href={item.link} className="footer-link">{item.name}</a>
+                    <Link to={item.to} className="footer-link">{item.name}</Link>
                   </li>
                 ))}
               </ul>
@@ -68,7 +97,7 @@ const Footer = () => {
               <ul className="footer-list">
                 {footerLinks.brands.map((item, index) => (
                   <li key={index}>
-                    <a href={item.link} className="footer-link">{item.name}</a>
+                    <Link to={item.to} className="footer-link">{item.name}</Link>
                   </li>
                 ))}
               </ul>
@@ -79,7 +108,7 @@ const Footer = () => {
               <ul className="footer-list">
                 {footerLinks.categories.map((item, index) => (
                   <li key={index}>
-                    <a href={item.link} className="footer-link">{item.name}</a>
+                    <Link to={item.to} className="footer-link">{item.name}</Link>
                   </li>
                 ))}
               </ul>
@@ -90,15 +119,30 @@ const Footer = () => {
               <p className="footer-newsletter-text">
                 Stay updated with news offers and special releases by subscribing to our newsletter!
               </p>
-              <form className="footer-newsletter-form">
-                <input 
-                  type="email" 
-                  placeholder="Email" 
+              <form className="footer-newsletter-form" onSubmit={handleSubscribe}>
+                <input
+                  type="email"
+                  placeholder="Email"
                   className="footer-newsletter-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={status === 'loading'}
+                  required
                 />
-                <button type="submit" className="footer-newsletter-btn">
-                  SUBSCRIBE
+                <button
+                  type="submit"
+                  className="footer-newsletter-btn"
+                  disabled={status === 'loading'}
+                >
+                  {status === 'loading' ? '...' : 'SUBSCRIBE'}
                 </button>
+                {message && (
+                  <span
+                    className={`footer-newsletter-msg ${status === 'error' ? 'error' : 'ok'}`}
+                  >
+                    {message}
+                  </span>
+                )}
               </form>
             </div>
           </div>
@@ -106,11 +150,10 @@ const Footer = () => {
 
         <div className="footer-bottom">
           <p className="copyright">
-            Copyright © 2026, BREDL Macba. All rights reserved.
+            Copyright © {new Date().getFullYear()}, BREDL Macba. All rights reserved.
           </p>
           <div className="payment-methods">
-            <span className="payment-icon">💳</span>
-            <span className="payment-text">Visa, Mastercard, PayPal, Apple Pay</span>
+            <span className="payment-text">Visa · Mastercard · PayPal · Apple Pay</span>
           </div>
         </div>
       </div>

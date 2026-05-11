@@ -1,6 +1,6 @@
 /* Top Brands Styles */
 .top-brands {
-  padding: 60px 20px;
+  padding: clamp(36px, 5vw, 60px) clamp(16px, 4vw, 20px);
   background: #f5f5f5;
 }
 

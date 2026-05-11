@@ -44,15 +44,25 @@ app.use(helmet({
 }));
 
 // CORS allowlist (audit item: CORS hardening — never *)
-const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+// Production: strict allowlist from env.
+// Development: also accept any http://localhost:* / http://127.0.0.1:* so the
+// CRA proxy (which may rewrite Origin to its target) doesn't trip the check.
+const stripTrailingSlash = (s) => (s || '').replace(/\/+$/, '');
+const corsOrigins = new Set(
+  (process.env.CORS_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map((s) => stripTrailingSlash(s.trim()))
+    .filter(Boolean),
+);
+const localhostOriginRegex = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const isDev = process.env.NODE_ENV !== 'production';
 app.use(cors({
   origin: (origin, cb) => {
     // Same-origin / curl / server-to-server (no Origin header)
     if (!origin) return cb(null, true);
-    if (corsOrigins.includes(origin)) return cb(null, true);
+    const normalized = stripTrailingSlash(origin);
+    if (corsOrigins.has(normalized)) return cb(null, true);
+    if (isDev && localhostOriginRegex.test(normalized)) return cb(null, true);
     return cb(new Error(`Origin not allowed by CORS: ${origin}`));
   },
   credentials: true,

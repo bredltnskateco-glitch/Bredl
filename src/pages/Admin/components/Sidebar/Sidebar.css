@@ -10,7 +10,7 @@
   left: 0;
   height: 100vh;
   z-index: 100;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, transform 0.3s ease;
   overflow: hidden;
 }
 
@@ -61,14 +61,21 @@
 .sidebar-toggle {
   background: none;
   border: none;
-  color: #666;
+  color: #888;
   cursor: pointer;
   padding: 8px;
   display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
 }
 
 .sidebar-toggle:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Navigation */
@@ -79,6 +86,8 @@
   flex-direction: column;
   gap: 4px;
   min-width: 260px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .nav-item {
@@ -157,6 +166,7 @@
   flex-direction: column;
   opacity: 0;
   transition: opacity 0.2s ease;
+  min-width: 0;
 }
 
 .admin-sidebar:hover .user-info {
@@ -167,6 +177,10 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
 }
 
 .user-role {
@@ -207,21 +221,47 @@
 
 @media (max-width: 768px) {
   .admin-sidebar {
-    width: 0;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4);
   }
-  
+
+  .admin-sidebar:hover {
+    width: 280px;
+  }
+
   .admin-sidebar.open {
-    width: 260px;
+    transform: translateX(0);
   }
-  
-  .admin-sidebar.open .admin-logo,
-  .admin-sidebar.open .nav-label,
-  .admin-sidebar.open .user-info,
-  .admin-sidebar.open .logout-btn span {
-    opacity: 1;
+
+  .admin-sidebar.closed {
+    width: 280px;
+    transform: translateX(-100%);
+    border-right: 1px solid #222;
   }
-  
+
+  .sidebar-header {
+    min-width: auto;
+  }
+
+  .sidebar-nav {
+    min-width: auto;
+  }
+
+  .sidebar-footer {
+    min-width: auto;
+  }
+
+  /* Always show labels when sidebar visible on mobile */
+  .admin-logo,
+  .nav-label,
+  .user-info,
+  .logout-btn span {
+    opacity: 1 !important;
+  }
+
   .sidebar-toggle {
-    display: block;
+    display: inline-flex;
   }
 }

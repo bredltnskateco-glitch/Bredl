@@ -39,30 +39,45 @@ const ShopProductCard = ({ product, onQuickView }) => {
   const inWishlist = isInWishlist(product.id);
 
   return (
-    <article 
+    <article
       className="shop-product-card"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <a href={`#product-${product.id}`} className="product-link">
+      <button
+        type="button"
+        className="product-link"
+        onClick={handleQuickView}
+        aria-label={`Quick view ${product.name}`}
+      >
         <div className="product-image-wrapper">
-          <button 
+          <button
+            type="button"
             className={`wishlist-btn ${inWishlist ? 'active' : ''}`}
             onClick={handleWishlistToggle}
             title={inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            aria-label={inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
           >
             <FiHeart />
           </button>
-          <img 
+          <img
             src={isHovered && product.hoverImage ? product.hoverImage : product.image}
             alt={product.name}
             className="product-image"
+            loading="lazy"
           />
           {product.isNew && <span className="badge badge-new">NEW</span>}
           {product.salePrice && <span className="badge badge-sale">SALE</span>}
           <div className="product-quick-actions">
-            <button className="quick-action-btn" onClick={handleQuickView}>Quick View</button>
-            <button 
+            <button
+              type="button"
+              className="quick-action-btn"
+              onClick={handleQuickView}
+            >
+              Quick View
+            </button>
+            <button
+              type="button"
               className={`quick-action-btn ${isAdding ? 'adding' : ''} ${isAdded ? 'added' : ''}`}
               onClick={handleAddToCart}
               disabled={isAdding}
@@ -95,7 +110,7 @@ const ShopProductCard = ({ product, onQuickView }) => {
             )}
           </div>
         </div>
-      </a>
+      </button>
     </article>
   );
 };

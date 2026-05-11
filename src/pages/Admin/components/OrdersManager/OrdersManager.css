@@ -85,11 +85,14 @@
   border: 1px solid #222;
   border-radius: 12px;
   overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .orders-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 760px;
 }
 
 .orders-table th,
@@ -411,7 +414,8 @@
   }
 
   .orders-stats {
-    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
   }
 
   .orders-table th,
@@ -419,7 +423,28 @@
     padding: 12px;
   }
 
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 18px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .modal-footer .btn-cancel {
+    width: 100%;
+  }
+
   .order-detail-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
 }
