@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   FiHome, FiShoppingBag, FiUsers, FiBox, FiTag,
-  FiBarChart2, FiSettings, FiMenu, FiEye, FiPlus,
-  FiStar, FiFileText
+  FiBarChart2, FiSettings, FiMenu, FiEye,
+  FiStar, FiFileText, FiShield, FiAlertTriangle
 } from 'react-icons/fi';
 
 // Import components
@@ -18,6 +18,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard/AnalyticsDashboa
 import SettingsPanel from './components/SettingsPanel/SettingsPanel';
 import NewArrivalsManager from './components/NewArrivalsManager/NewArrivalsManager';
 import NewsManager from './components/NewsManager/NewsManager';
+import MfaPanel from './components/MfaPanel/MfaPanel';
 
 import './AdminDashboard.css';
 
@@ -27,10 +28,12 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
+
+  const mfaRequired = user?.role === 'admin' && !user?.mfaEnabled;
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FiHome },
@@ -41,6 +44,7 @@ const AdminDashboard = () => {
     { id: 'customers', label: 'Customers', icon: FiUsers },
     { id: 'categories', label: 'Categories', icon: FiTag },
     { id: 'analytics', label: 'Analytics', icon: FiBarChart2 },
+    { id: 'security', label: 'Security (MFA)', icon: FiShield },
     { id: 'settings', label: 'Settings', icon: FiSettings }
   ];
 
@@ -60,9 +64,10 @@ const AdminDashboard = () => {
         return <CustomersManager />;
       case 'categories':
         return <CategoriesManager />;
-
       case 'analytics':
         return <AnalyticsDashboard />;
+      case 'security':
+        return <MfaPanel />;
       case 'settings':
         return <SettingsPanel />;
       default:
@@ -104,6 +109,45 @@ const AdminDashboard = () => {
             </Link>
           </div>
         </header>
+
+        {mfaRequired && activeTab !== 'security' && (
+          <div
+            role="alert"
+            style={{
+              margin: '12px 24px 0',
+              padding: '12px 16px',
+              borderRadius: 8,
+              background: '#fff7ed',
+              border: '1px solid #fed7aa',
+              color: '#9a3412',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 14,
+            }}
+          >
+            <FiAlertTriangle />
+            <span>
+              Multi-factor authentication is required for admins. Write actions
+              are blocked until you enable it.
+            </span>
+            <button
+              onClick={() => setActiveTab('security')}
+              style={{
+                marginLeft: 'auto',
+                background: '#9a3412',
+                color: '#fff',
+                border: 0,
+                padding: '6px 12px',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Set up now
+            </button>
+          </div>
+        )}
 
         <div className="admin-content">
           {renderContent()}

@@ -1,22 +1,34 @@
-import api, { setToken, getToken } from './client';
+import api, { ensureCsrfToken } from './client';
 
 export const authApi = {
-  login: (email, password) => api.post('/auth/login', { email, password }, { auth: false }),
-  register: (payload) => api.post('/auth/register', payload, { auth: false }),
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  register: (payload) => api.post('/auth/register', payload),
+  logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
   updateMe: (payload) => api.put('/auth/me', payload),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+};
+
+export const mfaApi = {
+  verifyLogin: (challengeToken, { code, backupCode }) =>
+    api.post('/auth/mfa/verify-login', { challengeToken, code, backupCode }),
+  setup: () => api.post('/auth/mfa/setup'),
+  enable: (code) => api.post('/auth/mfa/enable', { code }),
+  disable: (payload) => api.post('/auth/mfa/disable', payload),
+  regenerateBackupCodes: (password) => api.post('/auth/mfa/backup-codes', { password }),
 };
 
 export const productsApi = {
-  list: (params) => api.get('/products', params, { auth: false }),
-  get: (id) => api.get(`/products/${id}`, undefined, { auth: false }),
+  list: (params) => api.get('/products', params),
+  get: (id) => api.get(`/products/${id}`),
   create: (payload) => api.post('/products', payload),
   update: (id, payload) => api.put(`/products/${id}`, payload),
   remove: (id) => api.del(`/products/${id}`),
 };
 
 export const categoriesApi = {
-  list: () => api.get('/categories', undefined, { auth: false }),
+  list: () => api.get('/categories'),
   create: (payload) => api.post('/categories', payload),
   update: (id, payload) => api.put(`/categories/${id}`, payload),
   remove: (id) => api.del(`/categories/${id}`),
@@ -54,23 +66,23 @@ export const customersApi = {
 };
 
 export const newArrivalsApi = {
-  list: () => api.get('/new-arrivals', undefined, { auth: false }),
+  list: () => api.get('/new-arrivals'),
   create: (payload) => api.post('/new-arrivals', payload),
   update: (id, payload) => api.put(`/new-arrivals/${id}`, payload),
   remove: (id) => api.del(`/new-arrivals/${id}`),
 };
 
 export const newsApi = {
-  list: () => api.get('/news', undefined, { auth: false }),
-  get: (id) => api.get(`/news/${id}`, undefined, { auth: false }),
+  list: () => api.get('/news'),
+  get: (id) => api.get(`/news/${id}`),
   create: (payload) => api.post('/news', payload),
   update: (id, payload) => api.put(`/news/${id}`, payload),
   remove: (id) => api.del(`/news/${id}`),
 };
 
 export const newsletterApi = {
-  subscribe: (email) => api.post('/newsletter', { email }, { auth: false }),
-  unsubscribe: (email) => api.del(`/newsletter/${encodeURIComponent(email)}`, undefined, { auth: false }),
+  subscribe: (email) => api.post('/newsletter', { email }),
+  unsubscribe: (email) => api.del(`/newsletter/${encodeURIComponent(email)}`),
   list: () => api.get('/newsletter'),
 };
 
@@ -80,5 +92,5 @@ export const analyticsApi = {
   topProducts: (limit = 10) => api.get('/analytics/top-products', { limit }),
 };
 
-export { setToken, getToken };
+export { ensureCsrfToken };
 export default api;

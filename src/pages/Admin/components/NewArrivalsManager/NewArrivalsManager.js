@@ -1,47 +1,30 @@
-import React, { useState } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiStar } from 'react-icons/fi';
+import React, { useEffect, useState, useCallback } from 'react';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX } from 'react-icons/fi';
+import { newArrivalsApi } from '../../../../api';
 import './NewArrivalsManager.css';
 
 const NewArrivalsManager = () => {
-  const [arrivals, setArrivals] = useState([
-    {
-      id: 1,
-      name: 'BREDL SPORTECH TRACKSUIT JACKET BLACK',
-      category: 'streetwear',
-      image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=600&fit=crop',
-      regularPrice: 139.00,
-      salePrice: 125.10,
-      isOnSale: true,
-      isNew: false,
-      sizes: ['S', 'M', 'L', 'XL']
-    },
-    {
-      id: 2,
-      name: 'NIKE SB DUNK LOW PRO',
-      category: 'shoes',
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=600&fit=crop',
-      regularPrice: 119.00,
-      salePrice: null,
-      isOnSale: false,
-      isNew: true,
-      sizes: ['38', '39', '40', '41', '42', '43', '44', '45']
-    },
-    {
-      id: 3,
-      name: 'HOCKEY SKATEBOARDS DECK 8.25"',
-      category: 'skate',
-      image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=500&h=600&fit=crop',
-      regularPrice: 85.00,
-      salePrice: null,
-      isOnSale: false,
-      isNew: true,
-      sizes: ['8.0"', '8.25"', '8.5"']
-    }
-  ]);
-
+  const [arrivals, setArrivals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await newArrivalsApi.list();
+      setArrivals(data || []);
+    } catch (err) {
+      setError(err.message || 'Failed to load new arrivals');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
   const [formData, setFormData] = useState({
     name: '',
     category: 'streetwear',
@@ -66,7 +49,7 @@ const NewArrivalsManager = () => {
         salePrice: item.salePrice ? item.salePrice.toString() : '',
         isOnSale: item.isOnSale,
         isNew: item.isNew,
-        sizes: item.sizes.join(', ')
+        sizes: (item.sizes || []).join(', ')
       });
     } else {
       setEditingItem(null);
@@ -97,7 +80,7 @@ const NewArrivalsManager = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const itemData = {
       name: formData.name,
@@ -107,22 +90,32 @@ const NewArrivalsManager = () => {
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
       isOnSale: formData.isOnSale,
       isNew: formData.isNew,
-      sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s)
+      sizes: formData.sizes.split(',').map((s) => s.trim()).filter(Boolean),
     };
 
-    if (editingItem) {
-      setArrivals(prev => prev.map(item => 
-        item.id === editingItem.id ? { ...itemData, id: editingItem.id } : item
-      ));
-    } else {
-      setArrivals(prev => [...prev, { ...itemData, id: Date.now() }]);
+    try {
+      if (editingItem) {
+        const updated = await newArrivalsApi.update(editingItem._id, itemData);
+        setArrivals((prev) => prev.map((item) =>
+          item._id === editingItem._id ? { ...item, ...updated } : item,
+        ));
+      } else {
+        const created = await newArrivalsApi.create(itemData);
+        setArrivals((prev) => [created, ...prev]);
+      }
+      handleCloseModal();
+    } catch (err) {
+      alert(err.message || 'Save failed');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      setArrivals(prev => prev.filter(item => item.id !== id));
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this item?')) return;
+    try {
+      await newArrivalsApi.remove(id);
+      setArrivals((prev) => prev.filter((item) => item._id !== id));
+    } catch (err) {
+      alert(err.message || 'Delete failed');
     }
   };
 
@@ -149,10 +142,13 @@ const NewArrivalsManager = () => {
         </button>
       </div>
 
+      {loading && <p>Loading new arrivals...</p>}
+      {error && <p style={{ color: '#c00' }}>{error}</p>}
+
       {/* Grid */}
       <div className="arrivals-grid">
-        {filteredArrivals.map(item => (
-          <div key={item.id} className="arrival-card">
+        {filteredArrivals.map((item) => (
+          <div key={item._id} className="arrival-card">
             <div className="card-image">
               <img src={item.image} alt={item.name} />
               <div className="card-badges">
@@ -174,10 +170,10 @@ const NewArrivalsManager = () => {
                 )}
               </div>
               <div className="card-sizes">
-                {item.sizes.slice(0, 4).map(size => (
+                {(item.sizes || []).slice(0, 4).map((size) => (
                   <span key={size} className="size-tag">{size}</span>
                 ))}
-                {item.sizes.length > 4 && (
+                {(item.sizes || []).length > 4 && (
                   <span className="size-tag more">+{item.sizes.length - 4}</span>
                 )}
               </div>
@@ -186,7 +182,7 @@ const NewArrivalsManager = () => {
               <button className="action-btn edit" onClick={() => handleOpenModal(item)}>
                 <FiEdit2 />
               </button>
-              <button className="action-btn delete" onClick={() => handleDelete(item.id)}>
+              <button className="action-btn delete" onClick={() => handleDelete(item._id)}>
                 <FiTrash2 />
               </button>
             </div>

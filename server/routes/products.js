@@ -1,7 +1,7 @@
 const express = require('express');
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, requireMfa } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -52,12 +52,12 @@ router.get('/:id', asyncHandler(async (req, res) => {
   res.json(product);
 }));
 
-router.post('/', protect, adminOnly, asyncHandler(async (req, res) => {
+router.post('/', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const product = await Product.create(req.body);
   res.status(201).json(product);
 }));
 
-router.put('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.put('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -69,7 +69,7 @@ router.put('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
   res.json(product);
 }));
 
-router.delete('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const product = await Product.findByIdAndDelete(req.params.id);
   if (!product) {
     res.status(404);

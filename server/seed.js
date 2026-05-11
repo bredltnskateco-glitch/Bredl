@@ -243,19 +243,21 @@ const run = async () => {
   ]);
 
   console.log('Seeding users...');
+  // Demo passwords meet the production policy (≥12 chars, mixed case, digit, symbol).
+  // Rotate these immediately after first login.
   await User.create([
     {
       firstName: 'Admin',
       lastName: 'User',
       email: 'admin@rufusmacba.com',
-      password: 'admin123',
+      password: 'Admin#Demo2026',
       role: 'admin',
     },
     {
       firstName: 'John',
       lastName: 'Doe',
       email: 'client@test.com',
-      password: 'client123',
+      password: 'Client#Demo2026',
       role: 'client',
       phone: '+1 555 123 4567',
       address: { street: '123 Main St', city: 'Lisbon', postalCode: '1000-001', country: 'PT' },
@@ -286,8 +288,9 @@ const run = async () => {
   console.log('Seeding news...');
   await News.create(newsItems);
 
-  console.log('Done. Admin: admin@rufusmacba.com / admin123');
-  console.log('       Client: client@test.com / client123');
+  console.log('Done. Admin: admin@rufusmacba.com / Admin#Demo2026');
+  console.log('       Client: client@test.com / Client#Demo2026');
+  console.log('Rotate these passwords before any non-local use.');
   await mongoose.disconnect();
   process.exit(0);
 };

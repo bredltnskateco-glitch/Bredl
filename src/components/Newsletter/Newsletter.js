@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
+import { newsletterApi } from '../../api';
 import './Newsletter.css';
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle');
+  const [message, setMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle newsletter subscription
-    console.log('Subscribing:', email);
-    setEmail('');
-    alert('Thanks for subscribing!');
+    setStatus('loading');
+    setMessage('');
+    try {
+      await newsletterApi.subscribe(email);
+      setStatus('success');
+      setMessage('Thanks for subscribing!');
+      setEmail('');
+    } catch (err) {
+      setStatus('error');
+      setMessage(err.message || 'Subscription failed. Please try again.');
+    }
   };
 
   return (
@@ -26,12 +36,22 @@ const Newsletter = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={status === 'loading'}
             className="newsletter-input"
           />
-          <button type="submit" className="newsletter-btn">
-            SUBSCRIBE
+          <button
+            type="submit"
+            className="newsletter-btn"
+            disabled={status === 'loading'}
+          >
+            {status === 'loading' ? '...' : 'SUBSCRIBE'}
           </button>
         </form>
+        {message && (
+          <p style={{ marginTop: 12, color: status === 'error' ? '#c00' : 'inherit' }}>
+            {message}
+          </p>
+        )}
       </div>
     </section>
   );

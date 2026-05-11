@@ -1,7 +1,7 @@
 const express = require('express');
 const asyncHandler = require('express-async-handler');
 const News = require('../models/News');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, requireMfa } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   res.json(item);
 }));
 
-router.post('/', protect, adminOnly, asyncHandler(async (req, res) => {
+router.post('/', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   if (req.body.featured) {
     await News.updateMany({ featured: true }, { featured: false });
   }
@@ -27,7 +27,7 @@ router.post('/', protect, adminOnly, asyncHandler(async (req, res) => {
   res.status(201).json(item);
 }));
 
-router.put('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.put('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   if (req.body.featured) {
     await News.updateMany({ _id: { $ne: req.params.id }, featured: true }, { featured: false });
   }
@@ -39,7 +39,7 @@ router.put('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
   res.json(item);
 }));
 
-router.delete('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const item = await News.findByIdAndDelete(req.params.id);
   if (!item) {
     res.status(404);

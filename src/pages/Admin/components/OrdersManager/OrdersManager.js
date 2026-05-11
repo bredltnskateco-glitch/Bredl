@@ -1,41 +1,57 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FiSearch, FiFilter, FiEye, FiCheck, FiTruck, FiX } from 'react-icons/fi';
+import { ordersApi } from '../../../../api';
 import './OrdersManager.css';
 
-const OrdersManager = () => {
-  const [orders, setOrders] = useState([
-    { id: '#RM-2847', customer: 'John Doe', email: 'john@example.com', products: ['Palace Tri-Ferg Tee'], amount: 85.00, date: '2026-01-19', status: 'Completed' },
-    { id: '#RM-2846', customer: 'Sarah Smith', email: 'sarah@example.com', products: ['Nike SB Dunk Low', 'Thrasher Tee'], amount: 155.00, date: '2026-01-19', status: 'Processing' },
-    { id: '#RM-2845', customer: 'Mike Johnson', email: 'mike@example.com', products: ['Thrasher Hoodie'], amount: 95.00, date: '2026-01-18', status: 'Shipped' },
-    { id: '#RM-2844', customer: 'Emma Wilson', email: 'emma@example.com', products: ['Santa Cruz Complete', 'Bearings'], amount: 210.00, date: '2026-01-18', status: 'Pending' },
-    { id: '#RM-2843', customer: 'Alex Brown', email: 'alex@example.com', products: ['Vans Old Skool'], amount: 75.00, date: '2026-01-17', status: 'Completed' },
-    { id: '#RM-2842', customer: 'Lisa Davis', email: 'lisa@example.com', products: ['Supreme Hoodie', 'Cap', 'Socks'], amount: 380.00, date: '2026-01-17', status: 'Cancelled' },
-    { id: '#RM-2841', customer: 'Tom Garcia', email: 'tom@example.com', products: ['Carhartt Jacket'], amount: 180.00, date: '2026-01-16', status: 'Completed' },
-  ]);
+const statusOptions = ['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled'];
 
+const OrdersManager = () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const statusOptions = ['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled'];
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await ordersApi.list({ limit: 200 });
+      setOrders(data.items || []);
+    } catch (err) {
+      setError(err.message || 'Failed to load orders');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const updateOrderStatus = (orderId, newStatus) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
+  useEffect(() => { load(); }, [load]);
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const updated = await ordersApi.updateStatus(orderId, newStatus);
+      setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, ...updated } : o)));
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+    } catch (err) {
+      alert(err.message || 'Update failed');
+    }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredOrders = orders.filter((order) => {
+    const customerName = order.user
+      ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim()
+      : '';
+    const haystack = `${order.orderNumber || ''} ${customerName} ${order.user?.email || ''}`.toLowerCase();
+    const matchesSearch = haystack.includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'completed': return 'status-completed';
       case 'processing': return 'status-processing';
       case 'shipped': return 'status-shipped';
@@ -46,7 +62,7 @@ const OrdersManager = () => {
   };
 
   const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'completed': return <FiCheck />;
       case 'shipped': return <FiTruck />;
       case 'cancelled': return <FiX />;
@@ -54,16 +70,18 @@ const OrdersManager = () => {
     }
   };
 
+  const customerName = (o) =>
+    o.user ? `${o.user.firstName || ''} ${o.user.lastName || ''}`.trim() : '';
+
   return (
     <div className="orders-manager">
-      {/* Header */}
       <div className="orders-header">
         <div className="search-filter">
           <div className="search-box">
             <FiSearch />
-            <input 
-              type="text" 
-              placeholder="Search orders..." 
+            <input
+              type="text"
+              placeholder="Search orders..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -72,7 +90,7 @@ const OrdersManager = () => {
             <FiFilter />
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="all">All Status</option>
-              {statusOptions.map(status => (
+              {statusOptions.map((status) => (
                 <option key={status} value={status}>{status}</option>
               ))}
             </select>
@@ -80,97 +98,115 @@ const OrdersManager = () => {
         </div>
         <div className="orders-stats">
           <span className="stat-item">
-            <span className="stat-count">{orders.filter(o => o.status === 'Pending').length}</span>
+            <span className="stat-count">{orders.filter((o) => o.status === 'Pending').length}</span>
             Pending
           </span>
           <span className="stat-item">
-            <span className="stat-count">{orders.filter(o => o.status === 'Processing').length}</span>
+            <span className="stat-count">{orders.filter((o) => o.status === 'Processing').length}</span>
             Processing
           </span>
           <span className="stat-item">
-            <span className="stat-count">{orders.filter(o => o.status === 'Shipped').length}</span>
+            <span className="stat-count">{orders.filter((o) => o.status === 'Shipped').length}</span>
             Shipped
           </span>
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="orders-table-container">
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Products</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map(order => (
-              <tr key={order.id}>
-                <td className="order-id">{order.id}</td>
-                <td>
-                  <div className="customer-cell">
-                    <span className="customer-name">{order.customer}</span>
-                    <span className="customer-email">{order.email}</span>
-                  </div>
-                </td>
-                <td>
-                  <div className="products-cell">
-                    {order.products.slice(0, 2).join(', ')}
-                    {order.products.length > 2 && ` +${order.products.length - 2} more`}
-                  </div>
-                </td>
-                <td className="amount-cell">{order.amount.toFixed(2)} TND</td>
-                <td className="date-cell">{order.date}</td>
-                <td>
-                  <select 
-                    className={`status-select ${getStatusClass(order.status)}`}
-                    value={order.status}
-                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                  >
-                    {statusOptions.map(status => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <button className="view-btn" onClick={() => setSelectedOrder(order)}>
-                    <FiEye />
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {loading && <p>Loading orders...</p>}
+      {error && <p style={{ color: '#c00' }}>{error}</p>}
 
-      {/* Order Details Modal */}
+      {!loading && !error && (
+        <div className="orders-table-container">
+          <table className="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Products</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map((order) => {
+                const productNames = (order.items || []).map((i) => i.name);
+                return (
+                  <tr key={order._id}>
+                    <td className="order-id">{order.orderNumber}</td>
+                    <td>
+                      <div className="customer-cell">
+                        <span className="customer-name">{customerName(order) || '—'}</span>
+                        <span className="customer-email">{order.user?.email}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="products-cell">
+                        {productNames.slice(0, 2).join(', ')}
+                        {productNames.length > 2 && ` +${productNames.length - 2} more`}
+                      </div>
+                    </td>
+                    <td className="amount-cell">{Number(order.total || 0).toFixed(2)} TND</td>
+                    <td className="date-cell">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      <select
+                        className={`status-select ${getStatusClass(order.status)}`}
+                        value={order.status}
+                        onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <button className="view-btn" onClick={() => setSelectedOrder(order)}>
+                        <FiEye />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {selectedOrder && (
         <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
           <div className="modal-content order-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Order {selectedOrder.id}</h2>
+              <h2>Order {selectedOrder.orderNumber}</h2>
               <button className="modal-close" onClick={() => setSelectedOrder(null)}>
                 <FiX />
               </button>
             </div>
-            
+
             <div className="modal-body">
               <div className="order-detail-grid">
                 <div className="detail-section">
                   <h4>Customer Information</h4>
-                  <p><strong>Name:</strong> {selectedOrder.customer}</p>
-                  <p><strong>Email:</strong> {selectedOrder.email}</p>
+                  <p><strong>Name:</strong> {customerName(selectedOrder) || '—'}</p>
+                  <p><strong>Email:</strong> {selectedOrder.user?.email}</p>
+                  {selectedOrder.shippingAddress && (
+                    <p>
+                      <strong>Address:</strong>{' '}
+                      {[
+                        selectedOrder.shippingAddress.street,
+                        selectedOrder.shippingAddress.city,
+                        selectedOrder.shippingAddress.postalCode,
+                        selectedOrder.shippingAddress.country,
+                      ].filter(Boolean).join(', ')}
+                    </p>
+                  )}
                 </div>
                 <div className="detail-section">
                   <h4>Order Information</h4>
-                  <p><strong>Date:</strong> {selectedOrder.date}</p>
-                  <p><strong>Status:</strong> 
+                  <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                  <p><strong>Payment:</strong> {selectedOrder.paymentMethod}</p>
+                  <p><strong>Status:</strong>{' '}
                     <span className={`status-badge ${getStatusClass(selectedOrder.status)}`}>
                       {getStatusIcon(selectedOrder.status)} {selectedOrder.status}
                     </span>
@@ -181,15 +217,17 @@ const OrdersManager = () => {
               <div className="detail-section products-section">
                 <h4>Products</h4>
                 <ul className="products-list">
-                  {selectedOrder.products.map((product, idx) => (
-                    <li key={idx}>{product}</li>
+                  {(selectedOrder.items || []).map((item, idx) => (
+                    <li key={idx}>
+                      {item.name} × {item.quantity} — {Number(item.price).toFixed(2)} TND
+                    </li>
                   ))}
                 </ul>
               </div>
 
               <div className="order-total">
                 <span>Total Amount</span>
-                <span className="total-amount">{selectedOrder.amount.toFixed(2)} TND</span>
+                <span className="total-amount">{Number(selectedOrder.total || 0).toFixed(2)} TND</span>
               </div>
             </div>
 
@@ -197,15 +235,12 @@ const OrdersManager = () => {
               <button className="btn-cancel" onClick={() => setSelectedOrder(null)}>
                 Close
               </button>
-              <select 
+              <select
                 className={`status-select large ${getStatusClass(selectedOrder.status)}`}
                 value={selectedOrder.status}
-                onChange={(e) => {
-                  updateOrderStatus(selectedOrder.id, e.target.value);
-                  setSelectedOrder({ ...selectedOrder, status: e.target.value });
-                }}
+                onChange={(e) => updateOrderStatus(selectedOrder._id, e.target.value)}
               >
-                {statusOptions.map(status => (
+                {statusOptions.map((status) => (
                   <option key={status} value={status}>{status}</option>
                 ))}
               </select>

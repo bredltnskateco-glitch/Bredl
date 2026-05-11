@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
 const Register = () => {
@@ -13,22 +14,59 @@ const Register = () => {
     postalCode: '',
     country: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    newsletter: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value,
     });
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const validatePasswordClient = (pw) => {
+    if (!pw || pw.length < 12) return 'Password must be at least 12 characters';
+    if (pw.length > 128) return 'Password is too long';
+    if (!/[a-z]/.test(pw)) return 'Password must include a lowercase letter';
+    if (!/[A-Z]/.test(pw)) return 'Password must include an uppercase letter';
+    if (!/[0-9]/.test(pw)) return 'Password must include a digit';
+    if (!/[^A-Za-z0-9]/.test(pw)) return 'Password must include a symbol';
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log('Register submitted:', formData);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    const pwError = validatePasswordClient(formData.password);
+    if (pwError) {
+      setError(pwError);
+      return;
+    }
+
+    setIsLoading(true);
+    const { confirmPassword, ...payload } = formData;
+    const result = await register(payload);
+    setIsLoading(false);
+
+    if (result.success) {
+      navigate(result.user.role === 'admin' ? '/admin' : '/');
+    } else {
+      setError(result.error);
+    }
   };
 
   return (
@@ -38,6 +76,12 @@ const Register = () => {
           <h1>CREATE ACCOUNT</h1>
           <p>Join our community of riders and skaters.</p>
         </div>
+
+        {error && (
+          <div className="auth-error">
+            <span>⚠</span> {error}
+          </div>
+        )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-row">
@@ -180,7 +224,7 @@ const Register = () => {
                 {showPassword ? 'HIDE' : 'SHOW'}
               </button>
             </div>
-            <span className="input-hint">Must be at least 8 characters</span>
+            <span className="input-hint">At least 12 chars, with upper/lowercase, digit, and symbol</span>
           </div>
 
           <div className="form-group">
@@ -215,14 +259,23 @@ const Register = () => {
 
           <div className="form-options">
             <label className="checkbox-label">
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                name="newsletter"
+                checked={formData.newsletter}
+                onChange={handleChange}
+              />
               <span className="checkmark"></span>
               Subscribe to our newsletter for offers and new releases
             </label>
           </div>
 
-          <button type="submit" className="auth-btn primary">
-            CREATE ACCOUNT
+          <button
+            type="submit"
+            className={`auth-btn primary ${isLoading ? 'loading' : ''}`}
+            disabled={isLoading}
+          >
+            {isLoading ? 'CREATING...' : 'CREATE ACCOUNT'}
           </button>
 
           <div className="auth-divider">

@@ -1,49 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiArrowRight } from 'react-icons/fi';
+import { newsApi } from '../../api';
 import './News.css';
 
 const News = () => {
-  const newsItems = [
-    {
-      id: 1,
-      title: 'Brayan Albarenga: Thunder Trucks',
-      date: 'December 17, 2025',
-      image: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=800&h=500&fit=crop',
-      link: '#news-1',
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'New Palace Drop This Friday',
-      date: 'December 10, 2025',
-      image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=600&h=400&fit=crop',
-      link: '#news-2',
-      featured: false
-    },
-    {
-      id: 3,
-      title: 'Nike SB x BREDLCollaboration',
-      date: 'December 5, 2025',
-      image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=600&h=400&fit=crop',
-      link: '#news-3',
-      featured: false
-    }
-  ];
+  const [newsItems, setNewsItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredNews = newsItems.find(item => item.featured);
-  const otherNews = newsItems.filter(item => !item.featured);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const items = await newsApi.list();
+        if (!cancelled) setNewsItems(items);
+      } catch (err) {
+        console.error('Failed to load news:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) return null;
+  if (!newsItems.length) return null;
+
+  const featuredNews = newsItems.find((item) => item.featured) || newsItems[0];
+  const otherNews = newsItems.filter((item) => item._id !== featuredNews._id).slice(0, 2);
 
   return (
     <section className="news" id="blog">
       <div className="news-container">
         <h2 className="section-title">BREDL News</h2>
-        
+
         <div className="news-grid">
           {featuredNews && (
-            <a href={featuredNews.link} className="news-card featured">
+            <a href={featuredNews.link || '#'} className="news-card featured">
               <div className="news-image-wrapper">
-                <img 
-                  src={featuredNews.image} 
+                <img
+                  src={featuredNews.image}
                   alt={featuredNews.title}
                   className="news-image"
                 />
@@ -59,10 +54,10 @@ const News = () => {
 
           <div className="news-sidebar">
             {otherNews.map((item) => (
-              <a key={item.id} href={item.link} className="news-card small">
+              <a key={item._id} href={item.link || '#'} className="news-card small">
                 <div className="news-image-wrapper">
-                  <img 
-                    src={item.image} 
+                  <img
+                    src={item.image}
                     alt={item.title}
                     className="news-image"
                   />

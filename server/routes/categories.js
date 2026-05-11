@@ -2,7 +2,7 @@ const express = require('express');
 const asyncHandler = require('express-async-handler');
 const Category = require('../models/Category');
 const Product = require('../models/Product');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, requireMfa } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   res.json(category);
 }));
 
-router.post('/', protect, adminOnly, asyncHandler(async (req, res) => {
+router.post('/', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const { name, description, subcategories } = req.body;
   if (!name) {
     res.status(400);
@@ -48,7 +48,7 @@ router.post('/', protect, adminOnly, asyncHandler(async (req, res) => {
   res.status(201).json(category);
 }));
 
-router.put('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.put('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const update = { ...req.body };
   if (update.name) update.slug = slugify(update.name);
   const category = await Category.findByIdAndUpdate(req.params.id, update, { new: true });
@@ -59,7 +59,7 @@ router.put('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
   res.json(category);
 }));
 
-router.delete('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const category = await Category.findByIdAndDelete(req.params.id);
   if (!category) {
     res.status(404);

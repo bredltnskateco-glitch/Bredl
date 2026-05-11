@@ -1,111 +1,207 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { cartApi, ordersApi } from '../api';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
+const STORAGE_KEY = 'bredl_cart';
+
+const normalize = (item) => ({
+  ...item,
+  id: item.product || item.id,
+  product: item.product || item.id,
+  selectedSize: item.selectedSize ?? null,
+  selectedColor: item.selectedColor ?? null,
+  quantity: item.quantity ?? 1,
+});
+
+const sameItem = (a, b) =>
+  String(a.id || a.product) === String(b.id || b.product) &&
+  (a.selectedSize ?? null) === (b.selectedSize ?? null) &&
+  (a.selectedColor ?? null) === (b.selectedColor ?? null);
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
+  if (!context) throw new Error('useCart must be used within a CartProvider');
   return context;
 };
 
 export const CartProvider = ({ children }) => {
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const lastUserIdRef = useRef(null);
 
-  // Load cart from localStorage on mount
+  // Load from localStorage initially
   useEffect(() => {
-    const savedCart = localStorage.getItem('bredl_cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
-    }
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setCartItems(JSON.parse(saved).map(normalize));
+    } catch (_) {}
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Persist guest cart to localStorage
   useEffect(() => {
-    localStorage.setItem('bredl_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!user) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
+      } catch (_) {}
+    }
+  }, [cartItems, user]);
 
-  const addToCart = (product, selectedSize = null, selectedColor = null, quantity = 1) => {
-    setCartItems(prevItems => {
-      // Create a unique identifier for the item based on product, size, and color
-      const itemKey = `${product.id}-${selectedSize || 'no-size'}-${selectedColor || 'no-color'}`;
-      
-      const existingItemIndex = prevItems.findIndex(
-        item => `${item.id}-${item.selectedSize || 'no-size'}-${item.selectedColor || 'no-color'}` === itemKey
-      );
+  // Sync with backend on login / merge guest cart
+  useEffect(() => {
+    const syncOnLogin = async () => {
+      if (!user) {
+        if (lastUserIdRef.current) {
+          // Just logged out — clear in-memory cart
+          setCartItems([]);
+        }
+        lastUserIdRef.current = null;
+        return;
+      }
+      if (lastUserIdRef.current === user.id) return;
+      lastUserIdRef.current = user.id;
 
-      if (existingItemIndex > -1) {
-        // Item exists, update quantity
-        const updatedItems = [...prevItems];
-        updatedItems[existingItemIndex].quantity += quantity;
-        return updatedItems;
-      } else {
-        // New item, add to cart
-        return [...prevItems, {
-          ...product,
+      try {
+        const guestRaw = localStorage.getItem(STORAGE_KEY);
+        const guestItems = guestRaw ? JSON.parse(guestRaw) : [];
+        const payload = guestItems
+          .filter((i) => i && (i.product || i.id))
+          .map((i) => ({
+            product: i.product || i.id,
+            selectedSize: i.selectedSize ?? null,
+            selectedColor: i.selectedColor ?? null,
+            quantity: i.quantity || 1,
+          }));
+
+        const cart = payload.length
+          ? await cartApi.merge(payload)
+          : await cartApi.get();
+
+        setCartItems((cart.items || []).map(normalize));
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (err) {
+        console.error('Cart sync failed:', err);
+      }
+    };
+    syncOnLogin();
+  }, [user]);
+
+  const addToCart = useCallback(async (product, selectedSize = null, selectedColor = null, quantity = 1) => {
+    const productId = product.id || product._id;
+    setIsCartOpen(true);
+
+    if (user) {
+      try {
+        const cart = await cartApi.add({
+          productId,
           selectedSize,
           selectedColor,
           quantity,
-          addedAt: new Date().toISOString()
-        }];
+        });
+        setCartItems((cart.items || []).map(normalize));
+        return;
+      } catch (err) {
+        console.error('Add to cart failed:', err);
       }
-    });
-    
-    // Open cart drawer when item is added
-    setIsCartOpen(true);
-  };
-
-  const removeFromCart = (productId, selectedSize = null, selectedColor = null) => {
-    setCartItems(prevItems => 
-      prevItems.filter(item => 
-        !(item.id === productId && 
-          item.selectedSize === selectedSize && 
-          item.selectedColor === selectedColor)
-      )
-    );
-  };
-
-  const updateQuantity = (productId, selectedSize, selectedColor, newQuantity) => {
-    if (newQuantity < 1) {
-      removeFromCart(productId, selectedSize, selectedColor);
-      return;
     }
 
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId && 
-        item.selectedSize === selectedSize && 
-        item.selectedColor === selectedColor
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-  };
+    setCartItems((prev) => {
+      const candidate = {
+        ...product,
+        id: productId,
+        product: productId,
+        name: product.name,
+        image: product.image,
+        price: product.salePrice ?? product.price ?? product.regularPrice,
+        salePrice: product.salePrice ?? null,
+        regularPrice: product.price ?? product.regularPrice ?? null,
+        selectedSize,
+        selectedColor,
+        quantity,
+        addedAt: new Date().toISOString(),
+      };
+      const idx = prev.findIndex((i) => sameItem(i, candidate));
+      if (idx > -1) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], quantity: next[idx].quantity + quantity };
+        return next;
+      }
+      return [...prev, candidate];
+    });
+  }, [user]);
 
-  const clearCart = () => {
+  const removeFromCart = useCallback(async (productId, selectedSize = null, selectedColor = null) => {
+    if (user) {
+      try {
+        const cart = await cartApi.remove({ productId, selectedSize, selectedColor });
+        setCartItems((cart.items || []).map(normalize));
+        return;
+      } catch (err) {
+        console.error('Remove from cart failed:', err);
+      }
+    }
+    setCartItems((prev) => prev.filter((i) => !sameItem(i, { id: productId, selectedSize, selectedColor })));
+  }, [user]);
+
+  const updateQuantity = useCallback(async (productId, selectedSize, selectedColor, newQuantity) => {
+    if (newQuantity < 1) {
+      return removeFromCart(productId, selectedSize, selectedColor);
+    }
+    if (user) {
+      try {
+        const cart = await cartApi.update({
+          productId, selectedSize, selectedColor, quantity: newQuantity,
+        });
+        setCartItems((cart.items || []).map(normalize));
+        return;
+      } catch (err) {
+        console.error('Update quantity failed:', err);
+      }
+    }
+    setCartItems((prev) => prev.map((i) =>
+      sameItem(i, { id: productId, selectedSize, selectedColor })
+        ? { ...i, quantity: newQuantity }
+        : i,
+    ));
+  }, [user, removeFromCart]);
+
+  const clearCart = useCallback(async () => {
+    if (user) {
+      try {
+        await cartApi.clear();
+      } catch (err) {
+        console.error('Clear cart failed:', err);
+      }
+    }
     setCartItems([]);
-  };
+  }, [user]);
 
-  const getCartTotal = () => {
-    return cartItems.reduce((total, item) => {
-      const price = item.salePrice || item.price || item.regularPrice;
-      return total + (price * item.quantity);
-    }, 0);
-  };
+  const getCartTotal = () => cartItems.reduce((total, item) => {
+    const price = item.salePrice || item.price || item.regularPrice || 0;
+    return total + price * item.quantity;
+  }, 0);
 
-  const getCartItemsCount = () => {
-    return cartItems.reduce((count, item) => count + item.quantity, 0);
-  };
+  const getCartItemsCount = () => cartItems.reduce((c, i) => c + i.quantity, 0);
 
-  const isInCart = (productId) => {
-    return cartItems.some(item => item.id === productId);
-  };
+  const isInCart = (productId) => cartItems.some((i) => String(i.id) === String(productId));
+
+  const checkout = useCallback(async (payload = {}) => {
+    if (!user) throw new Error('You must be logged in to checkout');
+    const items = cartItems.map((i) => ({
+      product: i.product || i.id,
+      quantity: i.quantity,
+      selectedSize: i.selectedSize,
+      selectedColor: i.selectedColor,
+    }));
+    const created = await ordersApi.create({ items, ...payload });
+    setCartItems([]);
+    return created;
+  }, [user, cartItems]);
 
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
-  const toggleCart = () => setIsCartOpen(prev => !prev);
+  const toggleCart = () => setIsCartOpen((prev) => !prev);
 
   return (
     <CartContext.Provider value={{
@@ -115,12 +211,13 @@ export const CartProvider = ({ children }) => {
       removeFromCart,
       updateQuantity,
       clearCart,
+      checkout,
       getCartTotal,
       getCartItemsCount,
       isInCart,
       openCart,
       closeCart,
-      toggleCart
+      toggleCart,
     }}>
       {children}
     </CartContext.Provider>

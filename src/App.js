@@ -16,6 +16,8 @@ import Footer from './components/Footer/Footer';
 import Shop from './pages/Shop/Shop';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import './App.css';
 
@@ -105,6 +107,8 @@ function AppContent() {
         <Route path="/shop/:category" element={<MainLayout showHeader={showHeader}><Shop /></MainLayout>} />
         <Route path="/login" element={<MainLayout showHeader={showHeader}><Login /></MainLayout>} />
         <Route path="/register" element={<MainLayout showHeader={showHeader}><Register /></MainLayout>} />
+        <Route path="/forgot-password" element={<MainLayout showHeader={showHeader}><ForgotPassword /></MainLayout>} />
+        <Route path="/reset-password/:token" element={<MainLayout showHeader={showHeader}><ResetPassword /></MainLayout>} />
       </Routes>
     </div>
   );

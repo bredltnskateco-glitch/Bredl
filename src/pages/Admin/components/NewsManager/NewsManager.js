@@ -1,38 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiStar } from 'react-icons/fi';
+import { newsApi } from '../../../../api';
 import './NewsManager.css';
 
 const NewsManager = () => {
-    const [news, setNews] = useState([
-        {
-            id: 1,
-            title: 'Brayan Albarenga: Thunder Trucks',
-            date: 'December 17, 2025',
-            image: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=800&h=500&fit=crop',
-            link: '#news-1',
-            featured: true
-        },
-        {
-            id: 2,
-            title: 'New Palace Drop This Friday',
-            date: 'December 10, 2025',
-            image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=600&h=400&fit=crop',
-            link: '#news-2',
-            featured: false
-        },
-        {
-            id: 3,
-            title: 'Nike SB x BREDL Collaboration',
-            date: 'December 5, 2025',
-            image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=600&h=400&fit=crop',
-            link: '#news-3',
-            featured: false
-        }
-    ]);
-
+    const [news, setNews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    const load = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const data = await newsApi.list();
+            setNews(data || []);
+        } catch (err) {
+            setError(err.message || 'Failed to load news');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { load(); }, [load]);
     const [formData, setFormData] = useState({
         title: '',
         date: '',
@@ -82,7 +74,7 @@ const NewsManager = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const itemData = {
             title: formData.title,
@@ -92,27 +84,45 @@ const NewsManager = () => {
             featured: formData.featured
         };
 
-        if (editingItem) {
-            setNews(prev => prev.map(item =>
-                item.id === editingItem.id ? { ...itemData, id: editingItem.id } : item
-            ));
-        } else {
-            setNews(prev => [...prev, { ...itemData, id: Date.now() }]);
+        try {
+            if (editingItem) {
+                const updated = await newsApi.update(editingItem._id, itemData);
+                setNews((prev) => prev.map((item) =>
+                    item._id === editingItem._id ? { ...item, ...updated } : item,
+                ));
+            } else {
+                const created = await newsApi.create(itemData);
+                setNews((prev) => [created, ...prev]);
+            }
+            // If we set this one to featured, others will have been unfeatured server-side
+            if (itemData.featured) {
+                load();
+            }
+            handleCloseModal();
+        } catch (err) {
+            alert(err.message || 'Save failed');
         }
-        handleCloseModal();
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this news article?')) {
-            setNews(prev => prev.filter(item => item.id !== id));
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this news article?')) return;
+        try {
+            await newsApi.remove(id);
+            setNews((prev) => prev.filter((item) => item._id !== id));
+        } catch (err) {
+            alert(err.message || 'Delete failed');
         }
     };
 
-    const toggleFeatured = (id) => {
-        setNews(prev => prev.map(item => ({
-            ...item,
-            featured: item.id === id ? !item.featured : false
-        })));
+    const toggleFeatured = async (item) => {
+        try {
+            const updated = await newsApi.update(item._id, { featured: !item.featured });
+            // server unfeatures siblings; reload
+            await load();
+            void updated;
+        } catch (err) {
+            alert(err.message || 'Update failed');
+        }
     };
 
     const filteredNews = news.filter(item =>
@@ -138,6 +148,9 @@ const NewsManager = () => {
                 </button>
             </div>
 
+            {loading && <p>Loading news...</p>}
+            {error && <p style={{ color: '#c00' }}>{error}</p>}
+
             {/* News Table */}
             <div className="news-table-container">
                 <table className="news-table">
@@ -150,8 +163,8 @@ const NewsManager = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredNews.map(item => (
-                            <tr key={item.id} className={item.featured ? 'featured-row' : ''}>
+                        {filteredNews.map((item) => (
+                            <tr key={item._id} className={item.featured ? 'featured-row' : ''}>
                                 <td>
                                     <div className="article-cell">
                                         <img src={item.image} alt={item.title} className="article-thumb" />
@@ -167,7 +180,7 @@ const NewsManager = () => {
                                 <td>
                                     <button
                                         className={`featured-btn ${item.featured ? 'active' : ''}`}
-                                        onClick={() => toggleFeatured(item.id)}
+                                        onClick={() => toggleFeatured(item)}
                                         title={item.featured ? 'Remove from featured' : 'Set as featured'}
                                     >
                                         <FiStar />
@@ -178,7 +191,7 @@ const NewsManager = () => {
                                         <button className="action-btn edit" onClick={() => handleOpenModal(item)}>
                                             <FiEdit2 />
                                         </button>
-                                        <button className="action-btn delete" onClick={() => handleDelete(item.id)}>
+                                        <button className="action-btn delete" onClick={() => handleDelete(item._id)}>
                                             <FiTrash2 />
                                         </button>
                                     </div>

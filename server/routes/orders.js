@@ -3,11 +3,12 @@ const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, requireMfa } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Create new order (authenticated user). Decrements stock atomically.
+// Create new order (authenticated user). Decrements stock atomically per-line
+// using a conditional update so concurrent orders cannot oversell.
 router.post('/', protect, asyncHandler(async (req, res) => {
   const { items, shippingAddress, paymentMethod, shippingCost = 0, notes } = req.body;
 
@@ -15,23 +16,43 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Cart is empty');
   }
+  if (items.length > 100) {
+    res.status(400);
+    throw new Error('Too many items in a single order');
+  }
 
-  const productIds = items.map((i) => i.product).filter(Boolean);
+  // Validate shapes & coerce quantities to safe integers
+  const sanitized = items.map((it) => {
+    const qty = Math.floor(Number(it.quantity));
+    if (!it.product || !Number.isFinite(qty) || qty < 1 || qty > 999) {
+      const err = new Error('Invalid item in cart');
+      err.statusCode = 400;
+      throw err;
+    }
+    return {
+      product: it.product,
+      quantity: qty,
+      selectedSize: it.selectedSize ? String(it.selectedSize).slice(0, 20) : null,
+      selectedColor: it.selectedColor ? String(it.selectedColor).slice(0, 30) : null,
+    };
+  });
+
+  const allowedPayments = new Set(['cod', 'card', 'transfer']);
+  const finalPayment = allowedPayments.has(paymentMethod) ? paymentMethod : 'cod';
+
+  // Prices come from the DB only — never trust client totals.
+  const productIds = sanitized.map((i) => i.product);
   const dbProducts = await Product.find({ _id: { $in: productIds } });
   const productMap = new Map(dbProducts.map((p) => [p._id.toString(), p]));
 
   const orderItems = [];
   let itemsTotal = 0;
 
-  for (const it of items) {
+  for (const it of sanitized) {
     const dbProduct = productMap.get(String(it.product));
     if (!dbProduct) {
       res.status(400);
-      throw new Error(`Product ${it.product} not found`);
-    }
-    if (dbProduct.stock < it.quantity) {
-      res.status(400);
-      throw new Error(`Insufficient stock for ${dbProduct.name}`);
+      throw new Error('One of the products is no longer available');
     }
     const unitPrice = dbProduct.salePrice ?? dbProduct.price;
     itemsTotal += unitPrice * it.quantity;
@@ -41,18 +62,34 @@ router.post('/', protect, asyncHandler(async (req, res) => {
       image: dbProduct.image,
       price: unitPrice,
       quantity: it.quantity,
-      selectedSize: it.selectedSize || null,
-      selectedColor: it.selectedColor || null,
+      selectedSize: it.selectedSize,
+      selectedColor: it.selectedColor,
     });
   }
 
-  // Decrement stock
+  // Atomic, conditional stock decrement. If any line cannot satisfy stock,
+  // roll back the previous decrements to keep inventory consistent.
+  const decremented = [];
   for (const it of orderItems) {
-    await Product.updateOne({ _id: it.product }, { $inc: { stock: -it.quantity } });
+    const result = await Product.updateOne(
+      { _id: it.product, stock: { $gte: it.quantity } },
+      { $inc: { stock: -it.quantity } },
+    );
+    if (result.modifiedCount === 0) {
+      // Roll back previous successful decrements
+      for (const done of decremented) {
+        await Product.updateOne({ _id: done.product }, { $inc: { stock: done.quantity } });
+      }
+      res.status(409);
+      throw new Error(`Insufficient stock for ${it.name}`);
+    }
+    decremented.push(it);
   }
 
+  // Cap shipping cost to a sane range (server is the source of truth)
+  const safeShippingCost = Math.max(0, Math.min(Number(shippingCost) || 0, 10000));
   const orderNumber = await Order.generateOrderNumber();
-  const total = itemsTotal + Number(shippingCost || 0);
+  const total = itemsTotal + safeShippingCost;
 
   const order = await Order.create({
     orderNumber,
@@ -66,11 +103,11 @@ router.post('/', protect, asyncHandler(async (req, res) => {
       country: req.user.address?.country,
       phone: req.user.phone,
     },
-    paymentMethod: paymentMethod || 'cod',
+    paymentMethod: finalPayment,
     itemsTotal,
-    shippingCost,
+    shippingCost: safeShippingCost,
     total,
-    notes: notes || '',
+    notes: typeof notes === 'string' ? notes.slice(0, 1000) : '',
   });
 
   // Clear cart after checkout
@@ -114,7 +151,7 @@ router.get('/:id', protect, asyncHandler(async (req, res) => {
   res.json(order);
 }));
 
-router.put('/:id/status', protect, adminOnly, asyncHandler(async (req, res) => {
+router.put('/:id/status', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const { status } = req.body;
   const order = await Order.findById(req.params.id);
   if (!order) {
@@ -126,7 +163,7 @@ router.put('/:id/status', protect, adminOnly, asyncHandler(async (req, res) => {
   res.json(order);
 }));
 
-router.delete('/:id', protect, adminOnly, asyncHandler(async (req, res) => {
+router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
   const order = await Order.findByIdAndDelete(req.params.id);
   if (!order) {
     res.status(404);
