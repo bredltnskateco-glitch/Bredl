@@ -92,5 +92,13 @@ export const analyticsApi = {
   topProducts: (limit = 10) => api.get('/analytics/top-products', { limit }),
 };
 
+export const promosApi = {
+  validate: (code, subtotal) => api.post('/promos/validate', { code, subtotal }),
+  list: () => api.get('/promos'),
+  create: (payload) => api.post('/promos', payload),
+  update: (id, payload) => api.put(`/promos/${id}`, payload),
+  remove: (id) => api.del(`/promos/${id}`),
+};
+
 export { ensureCsrfToken };
 export default api;

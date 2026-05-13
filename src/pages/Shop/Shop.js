@@ -8,8 +8,15 @@ import ShopToolbar from './ShopToolbar';
 import ShopFilters from './ShopFilters';
 import ShopProductCard from './ShopProductCard';
 import ShopCategories from './ShopCategories';
-import { products, categories } from './shopData';
+import { categories } from './shopData';
+import { productsApi } from '../../api';
 import './Shop.css';
+
+const normalizeProduct = (p) => ({
+  ...p,
+  id: p._id || p.id,
+  isOnSale: p.salePrice != null,
+});
 
 const PAGE_SIZE = 12;
 
@@ -21,6 +28,26 @@ const Shop = () => {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [showQuickView, setShowQuickView] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await productsApi.list({ limit: 200 });
+        if (cancelled) return;
+        const items = Array.isArray(data) ? data : data.items || [];
+        setProducts(items.map(normalizeProduct));
+      } catch (err) {
+        if (!cancelled) setProductsError(err.message || 'Failed to load products');
+      } finally {
+        if (!cancelled) setProductsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const initialCategory = useMemo(() => {
     if (!category) return 'all';
@@ -136,7 +163,7 @@ const Shop = () => {
         break;
     }
     return list;
-  }, [activeFilters]);
+  }, [activeFilters, products]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleProducts.length < filteredProducts.length;
@@ -185,7 +212,11 @@ const Shop = () => {
             />
 
             <div className={`products-container ${viewMode}`}>
-              {visibleProducts.length === 0 ? (
+              {productsLoading ? (
+                <p style={{ textAlign: 'center', padding: '2rem' }}>Loading products…</p>
+              ) : productsError ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#c00' }}>{productsError}</p>
+              ) : visibleProducts.length === 0 ? (
                 <div className="shop-empty">
                   <p>No products match your filters.</p>
                   <button

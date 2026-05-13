@@ -14,6 +14,7 @@ import News from './components/News/News';
 import Newsletter from './components/Newsletter/Newsletter';
 import Footer from './components/Footer/Footer';
 import Shop from './pages/Shop/Shop';
+import Checkout from './pages/Checkout/Checkout';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
@@ -105,6 +106,7 @@ function AppContent() {
         <Route path="/" element={<MainLayout showHeader={showHeader}><HomePage /></MainLayout>} />
         <Route path="/shop" element={<MainLayout showHeader={showHeader}><Shop /></MainLayout>} />
         <Route path="/shop/:category" element={<MainLayout showHeader={showHeader}><Shop /></MainLayout>} />
+        <Route path="/checkout" element={<MainLayout showHeader={showHeader}><Checkout /></MainLayout>} />
         <Route path="/login" element={<MainLayout showHeader={showHeader}><Login /></MainLayout>} />
         <Route path="/register" element={<MainLayout showHeader={showHeader}><Register /></MainLayout>} />
         <Route path="/forgot-password" element={<MainLayout showHeader={showHeader}><ForgotPassword /></MainLayout>} />

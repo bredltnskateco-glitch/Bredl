@@ -3,6 +3,7 @@ const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
+const Promo = require('../models/Promo');
 const { protect, adminOnly, requireMfa } = require('../middleware/auth');
 
 const router = express.Router();
@@ -10,7 +11,9 @@ const router = express.Router();
 // Create new order (authenticated user). Decrements stock atomically per-line
 // using a conditional update so concurrent orders cannot oversell.
 router.post('/', protect, asyncHandler(async (req, res) => {
-  const { items, shippingAddress, paymentMethod, shippingCost = 0, notes } = req.body;
+  const {
+    items, shippingAddress, paymentMethod, shippingCost = 0, notes, promoCode,
+  } = req.body;
 
   if (!Array.isArray(items) || items.length === 0) {
     res.status(400);
@@ -88,8 +91,25 @@ router.post('/', protect, asyncHandler(async (req, res) => {
 
   // Cap shipping cost to a sane range (server is the source of truth)
   const safeShippingCost = Math.max(0, Math.min(Number(shippingCost) || 0, 10000));
+
+  // Promo: validate server-side. Never trust a client-supplied discount.
+  let discount = 0;
+  let appliedPromoCode = '';
+  let appliedPromoId = null;
+  if (promoCode) {
+    const promo = await Promo.findValid(promoCode);
+    if (promo) {
+      const candidate = promo.computeDiscount(itemsTotal);
+      if (candidate > 0) {
+        discount = candidate;
+        appliedPromoCode = promo.code;
+        appliedPromoId = promo._id;
+      }
+    }
+  }
+
   const orderNumber = await Order.generateOrderNumber();
-  const total = itemsTotal + safeShippingCost;
+  const total = Math.max(0, itemsTotal - discount + safeShippingCost);
 
   const order = await Order.create({
     orderNumber,
@@ -106,9 +126,16 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     paymentMethod: finalPayment,
     itemsTotal,
     shippingCost: safeShippingCost,
+    promoCode: appliedPromoCode,
+    discount,
     total,
     notes: typeof notes === 'string' ? notes.slice(0, 1000) : '',
   });
+
+  // Atomically increment promo usage only after the order is persisted.
+  if (appliedPromoId) {
+    await Promo.updateOne({ _id: appliedPromoId }, { $inc: { usedCount: 1 } });
+  }
 
   // Clear cart after checkout
   await Cart.findOneAndUpdate({ user: req.user._id }, { items: [] });

@@ -188,8 +188,11 @@ const OrdersManager = () => {
               <div className="order-detail-grid">
                 <div className="detail-section">
                   <h4>Customer Information</h4>
-                  <p><strong>Name:</strong> {customerName(selectedOrder) || '—'}</p>
+                  <p><strong>Name:</strong> {selectedOrder.shippingAddress?.fullName || customerName(selectedOrder) || '—'}</p>
                   <p><strong>Email:</strong> {selectedOrder.user?.email}</p>
+                  {selectedOrder.shippingAddress?.phone && (
+                    <p><strong>Phone:</strong> {selectedOrder.shippingAddress.phone}</p>
+                  )}
                   {selectedOrder.shippingAddress && (
                     <p>
                       <strong>Address:</strong>{' '}
@@ -206,6 +209,9 @@ const OrdersManager = () => {
                   <h4>Order Information</h4>
                   <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
                   <p><strong>Payment:</strong> {selectedOrder.paymentMethod}</p>
+                  {selectedOrder.promoCode && (
+                    <p><strong>Promo:</strong> {selectedOrder.promoCode}</p>
+                  )}
                   <p><strong>Status:</strong>{' '}
                     <span className={`status-badge ${getStatusClass(selectedOrder.status)}`}>
                       {getStatusIcon(selectedOrder.status)} {selectedOrder.status}
@@ -225,9 +231,25 @@ const OrdersManager = () => {
                 </ul>
               </div>
 
-              <div className="order-total">
-                <span>Total Amount</span>
-                <span className="total-amount">{Number(selectedOrder.total || 0).toFixed(2)} TND</span>
+              <div className="order-totals-block">
+                <div className="order-totals-row">
+                  <span>Subtotal</span>
+                  <span>{Number(selectedOrder.itemsTotal || 0).toFixed(2)} TND</span>
+                </div>
+                {Number(selectedOrder.discount) > 0 && (
+                  <div className="order-totals-row discount">
+                    <span>Discount{selectedOrder.promoCode ? ` (${selectedOrder.promoCode})` : ''}</span>
+                    <span>−{Number(selectedOrder.discount).toFixed(2)} TND</span>
+                  </div>
+                )}
+                <div className="order-totals-row">
+                  <span>Shipping</span>
+                  <span>{Number(selectedOrder.shippingCost || 0).toFixed(2)} TND</span>
+                </div>
+                <div className="order-total">
+                  <span>Total Amount</span>
+                  <span className="total-amount">{Number(selectedOrder.total || 0).toFixed(2)} TND</span>
+                </div>
               </div>
             </div>
 

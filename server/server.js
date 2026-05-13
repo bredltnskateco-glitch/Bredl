@@ -142,6 +142,7 @@ app.use('/api/new-arrivals', require('./routes/newArrivals'));
 app.use('/api/news', require('./routes/news'));
 app.use('/api/newsletter', require('./routes/newsletter'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/promos', require('./routes/promos'));
 
 app.use(notFound);
 app.use(errorHandler);
