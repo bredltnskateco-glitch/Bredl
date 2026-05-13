@@ -59,7 +59,7 @@ router.put('/item', protect, asyncHandler(async (req, res) => {
   const { productId, selectedSize = null, selectedColor = null, quantity } = req.body;
   const cart = await getOrCreateCart(req.user._id);
   const target = { product: productId, selectedSize, selectedColor };
-
+  // adding number validation here to prevent malicious clients from sending non-numeric or negative values
   if (Number(quantity) < 1) {
     cart.items = cart.items.filter((i) => !sameItem(i, target));
   } else {
@@ -74,7 +74,7 @@ router.put('/item', protect, asyncHandler(async (req, res) => {
   await cart.save();
   res.json(cart);
 }));
-
+//delete item by productId + options, not cart item id, to allow easier client implementation without exposing internal cart item ids. If multiple items match (shouldn't normally happen) all are removed.
 router.delete('/item', protect, asyncHandler(async (req, res) => {
   const { productId, selectedSize = null, selectedColor = null } = req.body;
   const cart = await getOrCreateCart(req.user._id);

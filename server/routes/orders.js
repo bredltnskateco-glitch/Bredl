@@ -168,6 +168,7 @@ router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, r
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
+    console.log('Attempted to delete non-existent order with id:', req.params.id);
   }
   res.json({ message: 'Order deleted' });
 }));

@@ -77,16 +77,25 @@ const ProductCard = ({ product }) => {
     setShowQuickView(true);
   };
 
+  const handleCardKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openQuickView();
+    }
+  };
+
   return (
     <article
       className="product-card"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <button
-        type="button"
+      <div
         className="product-link"
         onClick={openQuickView}
+        onKeyDown={handleCardKeyDown}
+        role="button"
+        tabIndex={0}
         aria-label={`Quick view ${product.name}`}
       >
         <div className="product-image-wrapper">
@@ -158,7 +167,7 @@ const ProductCard = ({ product }) => {
             )}
           </div>
         </div>
-      </button>
+      </div>
 
       <QuickView
         product={product}

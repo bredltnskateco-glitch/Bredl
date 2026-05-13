@@ -5,6 +5,13 @@ import { useAuth } from './AuthContext';
 const CartContext = createContext();
 const STORAGE_KEY = 'bredl_cart';
 
+// Products from the API have Mongo ObjectId strings (24 hex chars). Some pages
+// still render from static frontend data (numeric ids), and the server can't
+// look those up — skip the server round-trip for those and keep them in the
+// local cart only.
+const OBJECT_ID_RE = /^[0-9a-fA-F]{24}$/;
+const isServerProductId = (id) => typeof id === 'string' && OBJECT_ID_RE.test(id);
+
 const normalize = (item) => ({
   ...item,
   id: item.product || item.id,
@@ -91,7 +98,7 @@ export const CartProvider = ({ children }) => {
     const productId = product.id || product._id;
     setIsCartOpen(true);
 
-    if (user) {
+    if (user && isServerProductId(String(productId))) {
       try {
         const cart = await cartApi.add({
           productId,
@@ -132,7 +139,7 @@ export const CartProvider = ({ children }) => {
   }, [user]);
 
   const removeFromCart = useCallback(async (productId, selectedSize = null, selectedColor = null) => {
-    if (user) {
+    if (user && isServerProductId(String(productId))) {
       try {
         const cart = await cartApi.remove({ productId, selectedSize, selectedColor });
         setCartItems((cart.items || []).map(normalize));
@@ -148,7 +155,7 @@ export const CartProvider = ({ children }) => {
     if (newQuantity < 1) {
       return removeFromCart(productId, selectedSize, selectedColor);
     }
-    if (user) {
+    if (user && isServerProductId(String(productId))) {
       try {
         const cart = await cartApi.update({
           productId, selectedSize, selectedColor, quantity: newQuantity,
@@ -188,12 +195,17 @@ export const CartProvider = ({ children }) => {
 
   const checkout = useCallback(async (payload = {}) => {
     if (!user) throw new Error('You must be logged in to checkout');
-    const items = cartItems.map((i) => ({
-      product: i.product || i.id,
-      quantity: i.quantity,
-      selectedSize: i.selectedSize,
-      selectedColor: i.selectedColor,
-    }));
+    const items = cartItems
+      .map((i) => ({
+        product: i.product || i.id,
+        quantity: i.quantity,
+        selectedSize: i.selectedSize,
+        selectedColor: i.selectedColor,
+      }))
+      .filter((i) => isServerProductId(String(i.product)));
+    if (items.length === 0) {
+      throw new Error('Your cart has no checkout-eligible items.');
+    }
     const created = await ordersApi.create({ items, ...payload });
     setCartItems([]);
     return created;
