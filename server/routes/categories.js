@@ -56,7 +56,10 @@ router.get('/', asyncHandler(async (req, res) => {
     listCache = { etag, payload, expiresAt: now + CACHE_TTL_MS };
   }
 
-  res.set('Cache-Control', 'public, max-age=60');
+  // no-cache forces a conditional GET on every navigation so admin edits
+  // (delete sub-cat, rename, etc.) propagate immediately. The server-side
+  // 60s memo + ETag means revalidations return 304 without touching Mongo.
+  res.set('Cache-Control', 'no-cache');
   res.set('ETag', listCache.etag);
 
   if (req.headers['if-none-match'] === listCache.etag) {
