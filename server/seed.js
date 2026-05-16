@@ -350,6 +350,16 @@ const run = async () => {
   await connectDB();
 
   console.log('Clearing existing data...');
+  // Drop the users collection so any stale indexes (e.g. a non-sparse
+  // googleId_1 from an older schema) are removed and Mongoose can recreate
+  // them from the current schema definition on the next insert.
+  try {
+    await mongoose.connection.collection('users').drop();
+  } catch (err) {
+    if (err.codeName !== 'NamespaceNotFound') throw err;
+  }
+  await User.syncIndexes();
+
   await Promise.all([
     User.deleteMany({}),
     Product.deleteMany({}),
@@ -373,7 +383,7 @@ const run = async () => {
     {
       firstName: 'Admin',
       lastName: 'User',
-      email: 'admin@rufusmacba.com',
+      email: 'bredl.tn.skate.co@gmail.com',
       password: 'Admin#Demo2026',
       role: 'admin',
     },
@@ -422,7 +432,7 @@ const run = async () => {
   Object.assign(settingsDoc, settings);
   await settingsDoc.save();
 
-  console.log('Done. Admin: admin@rufusmacba.com / Admin#Demo2026');
+  console.log('Done. Admin: bredl.tn.skate.co@gmail.com / Admin#Demo2026');
   console.log('       Client: client@test.com / Client#Demo2026');
   console.log('Rotate these passwords before any non-local use.');
   await mongoose.disconnect();

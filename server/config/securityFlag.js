@@ -21,6 +21,6 @@
 // list and the re-enable procedure.
 //
 // FLIP TO `false` BEFORE DEPLOYING.
-const SECURITY_DISABLED = true;
+const SECURITY_DISABLED = false;
 
 module.exports = { SECURITY_DISABLED };

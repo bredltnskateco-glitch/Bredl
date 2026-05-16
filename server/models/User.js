@@ -36,8 +36,16 @@ const userSchema = new mongoose.Schema({
   newsletter: { type: Boolean, default: false },
 
   // Federated identity (Google Identity Services / Sign in with Google).
-  // Stored unique-but-sparse so password-only users don't collide on null.
-  googleId: { type: String, default: null, index: { unique: true, sparse: true } },
+  // Partial filter (not sparse): sparse still indexes docs with googleId: null,
+  // which would collide across all password-only users.
+  googleId: {
+    type: String,
+    default: null,
+    index: {
+      unique: true,
+      partialFilterExpression: { googleId: { $type: 'string' } },
+    },
+  },
 
   // Account lockout (audit item: brute force protection)
   failedLoginAttempts: { type: Number, default: 0, select: false },
