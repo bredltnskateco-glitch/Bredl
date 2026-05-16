@@ -1,0 +1,39 @@
+.google-signin {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.google-signin-button {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.google-signin-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #c0392b;
+  text-align: center;
+}
+
+.google-signin-disabled {
+  margin: 0.5rem 0 0;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  color: #6b6b6b;
+  background: #f4f4f4;
+  border: 1px dashed #d4d4d4;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.google-signin-disabled code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  background: #eaeaea;
+  padding: 1px 4px;
+  border-radius: 3px;
+}

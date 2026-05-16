@@ -4,6 +4,14 @@ import { newsApi } from '../../api';
 import './News.css';
 
 const PREVIEW_SIDEBAR_COUNT = 2;
+const FALLBACK_IMAGE = '/DSC00503.JPG';
+
+const getNewsImage = (item) => item?.image || FALLBACK_IMAGE;
+
+const handleImageError = (event) => {
+  if (event.currentTarget.src.endsWith(FALLBACK_IMAGE)) return;
+  event.currentTarget.src = FALLBACK_IMAGE;
+};
 
 const formatDisplayDate = (value) => {
   if (!value) return '';
@@ -93,10 +101,11 @@ const News = () => {
             >
               <div className="news-image-wrapper">
                 <img
-                  src={featuredNews.image}
+                  src={getNewsImage(featuredNews)}
                   alt={featuredNews.title}
                   className="news-image"
                   loading="lazy"
+                  onError={handleImageError}
                 />
                 <span className="news-card-badge">Featured</span>
               </div>
@@ -124,10 +133,11 @@ const News = () => {
               >
                 <div className="news-image-wrapper">
                   <img
-                    src={item.image}
+                    src={getNewsImage(item)}
                     alt={item.title}
                     className="news-image"
                     loading="lazy"
+                    onError={handleImageError}
                   />
                 </div>
                 <div className="news-content">
@@ -186,7 +196,13 @@ const News = () => {
                   rel={item.link && /^https?:\/\//i.test(item.link) ? 'noopener noreferrer' : undefined}
                 >
                   <div className="news-image-wrapper">
-                    <img src={item.image} alt={item.title} className="news-image" loading="lazy" />
+                    <img
+                      src={getNewsImage(item)}
+                      alt={item.title}
+                      className="news-image"
+                      loading="lazy"
+                      onError={handleImageError}
+                    />
                     {item.featured && <span className="news-card-badge">Featured</span>}
                   </div>
                   <div className="news-content">
@@ -222,7 +238,7 @@ const News = () => {
               <FiX />
             </button>
             <div className="news-article-image">
-              <img src={selected.image} alt={selected.title} />
+              <img src={getNewsImage(selected)} alt={selected.title} onError={handleImageError} />
             </div>
             <div className="news-article-body">
               <span className="news-date">

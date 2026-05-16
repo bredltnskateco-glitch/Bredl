@@ -1,7 +1,18 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FiSearch, FiMail, FiPhone, FiMapPin, FiShoppingBag, FiX } from 'react-icons/fi';
+import { FiSearch, FiMail, FiPhone, FiMapPin, FiShoppingBag, FiX, FiUsers } from 'react-icons/fi';
 import { customersApi } from '../../../../api';
+import { formatCurrency, formatDate } from '../../utils/format';
+import EmptyState from '../EmptyState/EmptyState';
 import './CustomersManager.css';
+
+const getInitials = (name) =>
+  String(name || '?')
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
 const CustomersManager = () => {
   const [customers, setCustomers] = useState([]);
@@ -30,7 +41,7 @@ const CustomersManager = () => {
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const formatJoined = (d) => (d ? new Date(d).toLocaleDateString() : '');
+  const totalRevenue = customers.reduce((sum, c) => sum + (c.spent || 0), 0);
 
   return (
     <div className="customers-manager">
@@ -50,9 +61,7 @@ const CustomersManager = () => {
             <span className="stat-label">Total Customers</span>
           </div>
           <div className="stat-box">
-            <span className="stat-value">
-              {customers.reduce((sum, c) => sum + (c.spent || 0), 0).toLocaleString()} TND
-            </span>
+            <span className="stat-value">{formatCurrency(totalRevenue)}</span>
             <span className="stat-label">Total Revenue</span>
           </div>
         </div>
@@ -61,13 +70,23 @@ const CustomersManager = () => {
       {loading && <p>Loading customers...</p>}
       {error && <p style={{ color: '#c00' }}>{error}</p>}
 
-      {!loading && !error && (
+      {!loading && !error && filteredCustomers.length === 0 && (
+        <EmptyState
+          icon={FiUsers}
+          title={customers.length === 0 ? 'No customers yet' : 'No customers match your search'}
+          hint={
+            customers.length === 0
+              ? 'New shoppers who register on the storefront will appear here automatically.'
+              : 'Try searching by a different name or email.'
+          }
+        />
+      )}
+
+      {!loading && !error && filteredCustomers.length > 0 && (
         <div className="customers-grid">
           {filteredCustomers.map((customer) => (
             <div key={customer.id} className="customer-card" onClick={() => setSelectedCustomer(customer)}>
-              <div className="customer-avatar">
-                {(customer.name || '?').split(' ').map((n) => n[0]).join('').slice(0, 2)}
-              </div>
+              <div className="customer-avatar">{getInitials(customer.name)}</div>
               <div className="customer-info">
                 <h3 className="customer-name">{customer.name}</h3>
                 <p className="customer-email">{customer.email}</p>
@@ -78,7 +97,7 @@ const CustomersManager = () => {
                   <span>{customer.orders} orders</span>
                 </div>
                 <div className="stat">
-                  <span className="spent">{Number(customer.spent || 0).toFixed(2)} TND</span>
+                  <span className="spent">{formatCurrency(customer.spent, { decimals: 2 })}</span>
                 </div>
               </div>
             </div>
@@ -98,12 +117,10 @@ const CustomersManager = () => {
 
             <div className="modal-body">
               <div className="customer-profile">
-                <div className="profile-avatar">
-                  {(selectedCustomer.name || '?').split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                </div>
+                <div className="profile-avatar">{getInitials(selectedCustomer.name)}</div>
                 <div className="profile-info">
                   <h3>{selectedCustomer.name}</h3>
-                  <p>Customer since {formatJoined(selectedCustomer.joined)}</p>
+                  <p>Customer since {formatDate(selectedCustomer.joined)}</p>
                 </div>
               </div>
 
@@ -132,14 +149,15 @@ const CustomersManager = () => {
                   <span className="metric-label">Total Orders</span>
                 </div>
                 <div className="metric">
-                  <span className="metric-value">{Number(selectedCustomer.spent || 0).toFixed(2)} TND</span>
+                  <span className="metric-value">{formatCurrency(selectedCustomer.spent, { decimals: 2 })}</span>
                   <span className="metric-label">Total Spent</span>
                 </div>
                 <div className="metric">
                   <span className="metric-value">
-                    {selectedCustomer.orders
-                      ? (selectedCustomer.spent / selectedCustomer.orders).toFixed(2)
-                      : '0.00'} TND
+                    {formatCurrency(
+                      selectedCustomer.orders ? selectedCustomer.spent / selectedCustomer.orders : 0,
+                      { decimals: 2 }
+                    )}
                   </span>
                   <span className="metric-label">Avg. Order</span>
                 </div>

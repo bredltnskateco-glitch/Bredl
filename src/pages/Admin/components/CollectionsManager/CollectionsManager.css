@@ -1,0 +1,189 @@
+.collections-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.collections-manager .manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.collections-manager .search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 10px 16px;
+  flex: 1;
+  max-width: 420px;
+  min-width: 0;
+}
+.collections-manager .search-box svg { color: #666; }
+.collections-manager .search-box input {
+  background: none; border: none; color: #fff;
+  font-size: 0.9rem; width: 100%; outline: none; font-family: inherit;
+}
+
+.collections-manager .add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.collections-manager .add-btn:hover { background: #e0e0e0; }
+
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.collection-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.collection-card:hover {
+  border-color: #333;
+  transform: translateY(-2px);
+}
+.collection-card.inactive {
+  opacity: 0.55;
+}
+
+.collection-cover {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #666;
+  overflow: hidden;
+}
+.collection-cover img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.collection-flag {
+  position: absolute;
+  top: 10px; left: 10px;
+  background: rgba(255, 68, 68, 0.85);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.collection-order {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.collection-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.collection-body h3 {
+  font-size: 1rem; color: #fff; margin: 0;
+}
+.collection-sub {
+  margin: 0; color: #888; font-size: 0.85rem;
+}
+.collection-href {
+  margin: 0; color: #4ade80;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.collection-actions {
+  display: flex;
+  border-top: 1px solid #1a1a1a;
+}
+.collection-actions .action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.collection-actions .action-btn:first-child {
+  border-right: 1px solid #1a1a1a;
+}
+.collection-actions .action-btn.edit:hover {
+  background: rgba(33, 150, 243, 0.15);
+  color: #2196f3;
+}
+.collection-actions .action-btn.delete:hover {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff6b6b;
+}
+
+.collection-image-preview {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid #222;
+}
+
+.inline-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #ccc;
+  cursor: pointer;
+}
+.inline-checkbox input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: #00c853;
+}
+
+@media (max-width: 768px) {
+  .collections-manager .manager-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .collections-manager .search-box { max-width: 100%; }
+  .collections-manager .add-btn {
+    justify-content: center;
+    min-height: 44px;
+  }
+}

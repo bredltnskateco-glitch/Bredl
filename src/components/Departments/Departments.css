@@ -24,6 +24,12 @@
 }
 
 .department-card {
+  position: relative;
+  display: block;
+  color: inherit;
+}
+
+.department-link {
   display: block;
   text-decoration: none;
   color: inherit;
@@ -40,6 +46,10 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.6s ease;
+}
+
+.department-image-placeholder {
+  background: linear-gradient(135deg, #e8e8e8 0%, #c4c4c4 100%);
 }
 
 .department-card:hover .department-image {
@@ -68,6 +78,80 @@
   text-transform: uppercase;
 }
 
+.department-subs {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 2.5vw, 28px);
+  background: rgba(0, 0, 0, 0.72);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 2;
+}
+
+.department-card.is-open .department-subs,
+.department-card.has-subs:hover .department-subs {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.department-subs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.department-sub-link {
+  display: block;
+  padding: 8px 12px;
+  color: #fff;
+  text-decoration: none;
+  font-size: clamp(12px, 1.4vw, 14px);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.department-sub-link:hover,
+.department-sub-link:focus-visible {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+
+.department-subs-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+  display: none;
+}
+
+.department-card.is-open .department-subs-toggle {
+  transform: rotate(45deg);
+}
+
 /* Responsive Styles */
 @media (max-width: 1024px) {
   .departments-grid {
@@ -81,5 +165,21 @@
     max-width: 420px;
     margin: 0 auto;
     gap: 14px;
+  }
+}
+
+@media (hover: none) {
+  .department-card.has-subs:hover .department-subs {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .department-card.has-subs .department-subs-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .department-card.is-open .department-subs {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

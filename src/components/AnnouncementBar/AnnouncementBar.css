@@ -1,11 +1,36 @@
 .announcement-bar {
+  position: relative;
   background-color: #000;
   color: #fff;
   text-align: center;
-  padding: 10px 16px;
+  padding: 10px 40px;
   font-size: 12px;
   letter-spacing: 0.5px;
   line-height: 1.4;
+}
+
+.announcement-dismiss {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.announcement-dismiss:hover,
+.announcement-dismiss:focus-visible {
+  opacity: 1;
+  outline: none;
 }
 
 .announcement-bar p {

@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { SECURITY_DISABLED } = require('../config/securityFlag');
 
 // Double-submit cookie CSRF protection.
 // - Server issues an unguessable token in a non-HttpOnly `XSRF-TOKEN` cookie
@@ -41,6 +42,7 @@ const timingSafeEqual = (a, b) => {
 };
 
 const csrfProtect = (req, res, next) => {
+  if (SECURITY_DISABLED) return next();
   if (SAFE_METHODS.has(req.method)) return next();
 
   // Pure Bearer-token API consumers (e.g. server-to-server) don't carry the

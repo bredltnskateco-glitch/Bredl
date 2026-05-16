@@ -3,9 +3,10 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import QuickView from '../QuickView/QuickView';
 import { FiHeart } from 'react-icons/fi';
+import { SPEC_LABELS } from '../../constants/subcategorySpecs';
 import './ProductCard.css';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, minimal = false }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
@@ -18,10 +19,24 @@ const ProductCard = ({ product }) => {
     return `${price.toFixed(2).replace('.', ',')} TND`;
   };
 
+  // If the product needs a size/color choice, defer to QuickView so the user
+  // can pick a variant. Otherwise add directly. Without this guard the same SKU
+  // can land in the cart twice (null + sized).
+  const requiresVariant = (
+    (product.sizes && product.sizes.length > 0) ||
+    (product.shoeSize && product.shoeSize.length > 0) ||
+    (product.colors && product.colors.length > 0)
+  );
+
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
+    if (requiresVariant) {
+      setShowQuickView(true);
+      return;
+    }
+
     setIsAdding(true);
     setTimeout(() => {
       addToCart(product);
@@ -31,39 +46,21 @@ const ProductCard = ({ product }) => {
     }, 300);
   };
 
-  // Get category-specific specs to display
+  // Build a compact list of specs to display from any subcategory-specific
+  // fields populated on the product, falling back to size summaries for
+  // apparel/footwear.
   const getProductSpecs = () => {
     const specs = [];
-    
-    // Skateboard deck specs
-    if (product.deckWidth) specs.push(product.deckWidth);
-    if (product.concave) specs.push(product.concave);
-    
-    // Skateboard wheels specs
-    if (product.wheelSize) specs.push(product.wheelSize);
-    if (product.durometer) specs.push(product.durometer);
-    
-    // Skateboard trucks specs
-    if (product.truckSize) specs.push(product.truckSize);
-    
-    // Surf specs
-    if (product.boardLength && product.category === 'surf') specs.push(product.boardLength);
-    if (product.finSetup) specs.push(product.finSetup);
-    
-    // Snowboard specs
-    if (product.boardLength && product.category === 'snowboard') specs.push(product.boardLength);
-    if (product.flex) specs.push(`Flex: ${product.flex}`);
-    
-    // Shoe sizes display
+    Object.keys(SPEC_LABELS).forEach((field) => {
+      if (!product[field]) return;
+      if (field === 'flex') specs.push(`Flex: ${product[field]}`);
+      else specs.push(product[field]);
+    });
     if (product.shoeSize && product.shoeSize.length > 0) {
       specs.push(`EU ${product.shoeSize[0]}-${product.shoeSize[product.shoeSize.length - 1]}`);
-    }
-    
-    // Clothing sizes display
-    if (product.sizes && product.sizes.length > 0 && !product.shoeSize) {
+    } else if (product.sizes && product.sizes.length > 0) {
       specs.push(product.sizes.join(' / '));
     }
-    
     return specs;
   };
 
@@ -111,6 +108,9 @@ const ProductCard = ({ product }) => {
           {product.isNew && (
             <span className="new-badge">NEW</span>
           )}
+          {product.isPromo && (
+            <span className="promo-badge">PROMO</span>
+          )}
           <button
             type="button"
             className={`product-wishlist-btn ${inWishlist ? 'active' : ''}`}
@@ -143,29 +143,31 @@ const ProductCard = ({ product }) => {
         </div>
         <div className="product-info">
           <h3 className="product-name">{product.name}</h3>
-          {specs.length > 0 && (
+          {!minimal && specs.length > 0 && (
             <div className="product-specs">
               {specs.slice(0, 3).map((spec, index) => (
                 <span key={index} className="spec-tag">{spec}</span>
               ))}
             </div>
           )}
-          <div className="product-prices">
-            {product.isOnSale || product.salePrice ? (
-              <>
-                <span className="regular-price strikethrough">
+          {!minimal && (
+            <div className="product-prices">
+              {product.isOnSale || product.salePrice ? (
+                <>
+                  <span className="regular-price strikethrough">
+                    {formatPrice(product.regularPrice || product.price)}
+                  </span>
+                  <span className="sale-price">
+                    {formatPrice(product.salePrice)}
+                  </span>
+                </>
+              ) : (
+                <span className="regular-price">
                   {formatPrice(product.regularPrice || product.price)}
                 </span>
-                <span className="sale-price">
-                  {formatPrice(product.salePrice)}
-                </span>
-              </>
-            ) : (
-              <span className="regular-price">
-                {formatPrice(product.regularPrice || product.price)}
-              </span>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

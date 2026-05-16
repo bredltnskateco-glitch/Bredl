@@ -6,11 +6,20 @@ import { useCart } from '../../context/CartContext';
 import { promosApi } from '../../api';
 import './Checkout.css';
 
+// Online gateways are not integrated yet — every method currently records the
+// order and is settled manually by the team. Keep the chosen label on the order
+// so finance knows which gateway to invoice through.
 const PAYMENT_METHODS = [
-  { id: 'cod', label: 'Cash on Delivery', description: 'Pay when you receive your order.' },
-  { id: 'card', label: 'Credit / Debit Card', description: 'Processed at delivery (no online payment yet).' },
-  { id: 'transfer', label: 'Bank Transfer', description: 'We\'ll send wire details after order confirmation.' },
+  { id: 'cod', label: 'Cash on delivery', description: 'Pay in cash when your order arrives.' },
+  { id: 'flouci', label: 'Flouci (manual)', description: 'We will contact you to share Flouci payment details after the order is placed.' },
+  { id: 'bank', label: 'Bank transfer', description: 'We will email transfer details after the order is placed.' },
 ];
+
+const PAYMENT_FOLLOWUP_NOTES = {
+  cod: 'You will pay in cash when the courier delivers your order.',
+  flouci: 'Our team will contact you with Flouci payment details shortly.',
+  bank: 'Bank transfer details will arrive in your email shortly.',
+};
 
 const formatPrice = (value) => `${Number(value || 0).toFixed(2).replace('.', ',')} TND`;
 
@@ -158,9 +167,9 @@ const Checkout = () => {
           <p className="success-meta">
             Total charged: <strong>{formatPrice(confirmation.total)}</strong>
           </p>
-          {confirmation.paymentMethod === 'transfer' && (
+          {PAYMENT_FOLLOWUP_NOTES[confirmation.paymentMethod] && (
             <p className="success-note">
-              We'll email you bank transfer instructions shortly.
+              {PAYMENT_FOLLOWUP_NOTES[confirmation.paymentMethod]}
             </p>
           )}
           <div className="success-actions">
@@ -238,25 +247,28 @@ const Checkout = () => {
 
             <section className="checkout-section">
               <h2>Payment method</h2>
-              <div className="payment-options">
-                {PAYMENT_METHODS.map((m) => (
-                  <label
-                    key={m.id}
-                    className={`payment-option ${form.paymentMethod === m.id ? 'selected' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={m.id}
-                      checked={form.paymentMethod === m.id}
-                      onChange={update('paymentMethod')}
-                    />
-                    <div>
-                      <span className="payment-label">{m.label}</span>
-                      <span className="payment-description">{m.description}</span>
-                    </div>
-                  </label>
-                ))}
+              <div className="payment-options" role="radiogroup" aria-label="Payment method">
+                {PAYMENT_METHODS.map((m) => {
+                  const isSelected = form.paymentMethod === m.id;
+                  return (
+                    <label
+                      key={m.id}
+                      className={`payment-option ${isSelected ? 'selected' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={m.id}
+                        checked={isSelected}
+                        onChange={update('paymentMethod')}
+                      />
+                      <div>
+                        <span className="payment-label">{m.label}</span>
+                        <span className="payment-description">{m.description}</span>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </section>
           </div>

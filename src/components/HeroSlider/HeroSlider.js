@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FiChevronDown } from 'react-icons/fi';
+import { productsApi, brandsApi } from '../../api';
 import './HeroSlider.css';
 
 const HeroSlider = () => {
@@ -48,6 +49,28 @@ const HeroSlider = () => {
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Live counts shown in the stat strip. Falls back to hiding the strip if
+  // the public endpoints fail rather than rendering misleading placeholders.
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [productList, brandList] = await Promise.all([
+          productsApi.list({ limit: 1, page: 1 }),
+          brandsApi.list(),
+        ]);
+        if (cancelled) return;
+        const productTotal = productList?.total ?? (Array.isArray(productList) ? productList.length : 0);
+        const brandTotal = Array.isArray(brandList) ? brandList.length : 0;
+        setStats({ products: productTotal, brands: brandTotal });
+      } catch (_err) {
+        // leave stats null — strip is hidden
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // Scroll to content
@@ -124,23 +147,24 @@ const HeroSlider = () => {
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="hero-stats">
-          <div className="stat-item">
-            <span className="stat-number">500+</span>
-            <span className="stat-label">Products</span>
+        {/* Stats — only rendered once we have real counts from the API. */}
+        {stats && (stats.products > 0 || stats.brands > 0) && (
+          <div className="hero-stats">
+            <div className="stat-item">
+              <span className="stat-number">{stats.products}</span>
+              <span className="stat-label">Products</span>
+            </div>
+            {stats.brands > 0 && (
+              <>
+                <div className="stat-divider"></div>
+                <div className="stat-item">
+                  <span className="stat-number">{stats.brands}</span>
+                  <span className="stat-label">Brands</span>
+                </div>
+              </>
+            )}
           </div>
-          <div className="stat-divider"></div>
-          <div className="stat-item">
-            <span className="stat-number">50+</span>
-            <span className="stat-label">Brands</span>
-          </div>
-          <div className="stat-divider"></div>
-          <div className="stat-item">
-            <span className="stat-number">10K+</span>
-            <span className="stat-label">Riders</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Scroll Indicator */}

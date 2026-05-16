@@ -1,0 +1,194 @@
+.brands-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.brands-manager .manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brands-manager .search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 10px 16px;
+  flex: 1;
+  max-width: 420px;
+  min-width: 0;
+}
+.brands-manager .search-box svg { color: #666; }
+.brands-manager .search-box input {
+  background: none; border: none; color: #fff;
+  font-size: 0.9rem; width: 100%; outline: none; font-family: inherit;
+}
+
+.brands-manager .add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.brands-manager .add-btn:hover { background: #e0e0e0; }
+
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.brand-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.brand-card:hover {
+  border-color: #333;
+}
+.brand-card.featured {
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+.brand-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #1a1a1a;
+  background: #0d0d0d;
+}
+.brand-feature-btn {
+  width: 32px; height: 32px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #666;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+.brand-feature-btn:hover {
+  color: #ffd700;
+  border-color: #ffd700;
+}
+.brand-feature-btn.active {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+.brand-feature-btn.active svg { fill: #ffd700; }
+.brand-order {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.brand-card-body {
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+.brand-logo {
+  width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  padding: 8px;
+}
+.brand-name-fallback {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  background: #1a1a1a;
+  padding: 16px 24px;
+  border-radius: 6px;
+  width: 100%;
+}
+.brand-name {
+  font-size: 1rem;
+  color: #fff;
+  margin: 0;
+}
+.brand-href {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #4ade80;
+  font-family: ui-monospace, monospace;
+  word-break: break-all;
+}
+
+.brand-actions {
+  display: flex;
+  border-top: 1px solid #1a1a1a;
+}
+.brand-actions .action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.brand-actions .action-btn:first-child {
+  border-right: 1px solid #1a1a1a;
+}
+.brand-actions .action-btn.edit:hover {
+  background: rgba(33, 150, 243, 0.15);
+  color: #2196f3;
+}
+.brand-actions .action-btn.delete:hover {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff6b6b;
+}
+
+.brand-image-preview {
+  display: block;
+  max-width: 200px;
+  max-height: 100px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .brands-manager .manager-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .brands-manager .search-box { max-width: 100%; }
+  .brands-manager .add-btn {
+    justify-content: center;
+    min-height: 44px;
+  }
+}

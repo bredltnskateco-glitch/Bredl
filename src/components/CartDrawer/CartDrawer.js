@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { FiX, FiPlus, FiMinus, FiShoppingBag, FiTrash2, FiArrowRight, FiShield, FiTruck, FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
@@ -19,8 +19,6 @@ const CartDrawer = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const [checkoutError, setCheckoutError] = useState('');
-
   const formatPrice = (price) => {
     return `${price.toFixed(2).replace('.', ',')} TND`;
   };
@@ -28,7 +26,6 @@ const CartDrawer = () => {
   const itemCount = getCartItemsCount();
 
   const handleCheckout = () => {
-    setCheckoutError('');
     closeCart();
     if (!isAuthenticated()) {
       navigate('/login');
@@ -36,6 +33,15 @@ const CartDrawer = () => {
     }
     navigate('/checkout');
   };
+
+  useEffect(() => {
+    if (!isCartOpen) return undefined;
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') closeCart();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isCartOpen, closeCart]);
 
   if (!isCartOpen) return null;
 
@@ -61,7 +67,10 @@ const CartDrawer = () => {
             </div>
             <h3>Your cart is empty</h3>
             <p>Discover our latest collection and find something you'll love.</p>
-            <button className="continue-shopping-btn" onClick={closeCart}>
+            <button
+              className="continue-shopping-btn"
+              onClick={() => { closeCart(); navigate('/shop'); }}
+            >
               Start Shopping
             </button>
           </div>
@@ -143,10 +152,6 @@ const CartDrawer = () => {
               </div>
 
               <p className="shipping-note">Shipping & taxes calculated at checkout</p>
-
-              {checkoutError && (
-                <p className="checkout-error">{checkoutError}</p>
-              )}
 
               <button
                 type="button"

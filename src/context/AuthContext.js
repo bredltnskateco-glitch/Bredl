@@ -49,6 +49,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Sign in / register via Google. `credential` is the ID token returned by
+  // Google Identity Services. MFA enforcement matches the password flow — if
+  // the account has MFA enabled, the caller still has to complete the TOTP
+  // challenge via verifyMfaLogin.
+  const loginWithGoogle = async (credential) => {
+    try {
+      const result = await authApi.loginWithGoogle(credential);
+      if (result.mfaRequired && result.challengeToken) {
+        setPendingMfa({ challengeToken: result.challengeToken, email: null });
+        return { success: true, mfaRequired: true };
+      }
+      setPendingMfa(null);
+      setUser(result.user);
+      return {
+        success: true,
+        user: result.user,
+        mfaSetupRequired: result.mfaSetupRequired === true,
+      };
+    } catch (err) {
+      return { success: false, error: err.message || 'Google sign-in failed' };
+    }
+  };
+
   const verifyMfaLogin = async ({ code, backupCode }) => {
     if (!pendingMfa) {
       return { success: false, error: 'No MFA challenge in progress' };
@@ -102,6 +125,7 @@ export const AuthProvider = ({ children }) => {
       loading,
       pendingMfa,
       login,
+      loginWithGoogle,
       verifyMfaLogin,
       cancelMfaLogin,
       register,

@@ -1,5 +1,6 @@
 const express = require('express');
 const asyncHandler = require('express-async-handler');
+const crypto = require('crypto');
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 const { protect, adminOnly, requireMfa } = require('../middleware/auth');
@@ -8,7 +9,11 @@ const router = express.Router();
 
 const slugify = (s) => s.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
-router.get('/', asyncHandler(async (req, res) => {
+const CACHE_TTL_MS = 60_000;
+let listCache = { etag: null, payload: null, expiresAt: 0 };
+const invalidateList = () => { listCache = { etag: null, payload: null, expiresAt: 0 }; };
+
+const buildEnrichedList = async () => {
   const categories = await Category.find().sort({ name: 1 });
 
   const counts = await Product.aggregate([
@@ -16,12 +21,48 @@ router.get('/', asyncHandler(async (req, res) => {
   ]);
   const countMap = counts.reduce((acc, c) => ({ ...acc, [c._id]: c.count }), {});
 
-  const enriched = categories.map((cat) => ({
-    ...cat.toObject(),
-    productCount: countMap[cat.slug] || 0,
-  }));
+  const slugsNeedingFallback = categories
+    .filter((c) => !c.image)
+    .map((c) => c.slug);
 
-  res.json(enriched);
+  const fallbackImages = {};
+  if (slugsNeedingFallback.length) {
+    // One newest product image per category — bounded result set, uses the
+    // { category: 1, createdAt: -1 } compound index instead of scanning every
+    // product in those categories.
+    const picks = await Product.aggregate([
+      { $match: { category: { $in: slugsNeedingFallback }, image: { $nin: [null, ''] } } },
+      { $sort: { category: 1, createdAt: -1 } },
+      { $group: { _id: '$category', image: { $first: '$image' } } },
+    ]);
+    for (const p of picks) fallbackImages[p._id] = p.image;
+  }
+
+  return categories.map((cat) => {
+    const obj = cat.toObject();
+    return {
+      ...obj,
+      productCount: countMap[cat.slug] || 0,
+      coverImage: obj.image || fallbackImages[cat.slug] || '',
+    };
+  });
+};
+
+router.get('/', asyncHandler(async (req, res) => {
+  const now = Date.now();
+  if (!listCache.payload || now >= listCache.expiresAt) {
+    const payload = await buildEnrichedList();
+    const etag = `"${crypto.createHash('sha1').update(JSON.stringify(payload)).digest('hex').slice(0, 16)}"`;
+    listCache = { etag, payload, expiresAt: now + CACHE_TTL_MS };
+  }
+
+  res.set('Cache-Control', 'public, max-age=60');
+  res.set('ETag', listCache.etag);
+
+  if (req.headers['if-none-match'] === listCache.etag) {
+    return res.status(304).end();
+  }
+  return res.json(listCache.payload);
 }));
 
 router.get('/:id', asyncHandler(async (req, res) => {
@@ -34,7 +75,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 
 router.post('/', protect, adminOnly, requireMfa, asyncHandler(async (req, res) => {
-  const { name, description, subcategories } = req.body;
+  const { name, description, image, subcategories } = req.body;
   if (!name) {
     res.status(400);
     throw new Error('Category name is required');
@@ -43,8 +84,10 @@ router.post('/', protect, adminOnly, requireMfa, asyncHandler(async (req, res) =
     name,
     slug: slugify(name),
     description: description || '',
+    image: image || '',
     subcategories: subcategories || [],
   });
+  invalidateList();
   res.status(201).json(category);
 }));
 
@@ -56,6 +99,7 @@ router.put('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, res)
     res.status(404);
     throw new Error('Category not found');
   }
+  invalidateList();
   res.json(category);
 }));
 
@@ -65,6 +109,7 @@ router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, r
     res.status(404);
     throw new Error('Category not found');
   }
+  invalidateList();
   res.json({ message: 'Category deleted' });
 }));
 

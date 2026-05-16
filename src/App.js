@@ -3,12 +3,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { SettingsProvider } from './context/SettingsContext';
 import LoadingScreen from './components/LoadingScreen/LoadingScreen';
 import Header from './components/Header/Header';
+import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
 import CartDrawer from './components/CartDrawer/CartDrawer';
 import Wishlist from './components/Wishlist/Wishlist';
 import HeroSlider from './components/HeroSlider/HeroSlider';
 import NewArrivals from './components/NewArrivals/NewArrivals';
+import FeaturedProducts from './components/FeaturedProducts/FeaturedProducts';
 import Departments from './components/Departments/Departments';
 import News from './components/News/News';
 import Newsletter from './components/Newsletter/Newsletter';
@@ -19,6 +22,8 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
 import ResetPassword from './pages/Auth/ResetPassword';
+import Terms from './pages/Legal/Terms';
+import Privacy from './pages/Legal/Privacy';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import './App.css';
 
@@ -28,6 +33,7 @@ const HomePage = () => (
     <HeroSlider />
     <NewArrivals />
     <Departments />
+    <FeaturedProducts />
     <News />
     <Newsletter />
   </>
@@ -51,6 +57,7 @@ const AdminRoute = ({ children }) => {
 // Layout wrapper for pages with header/footer
 const MainLayout = ({ children, showHeader }) => (
   <>
+    <AnnouncementBar />
     <Header isVisible={showHeader} />
     <CartDrawer />
     <Wishlist />
@@ -111,6 +118,8 @@ function AppContent() {
         <Route path="/register" element={<MainLayout showHeader={showHeader}><Register /></MainLayout>} />
         <Route path="/forgot-password" element={<MainLayout showHeader={showHeader}><ForgotPassword /></MainLayout>} />
         <Route path="/reset-password/:token" element={<MainLayout showHeader={showHeader}><ResetPassword /></MainLayout>} />
+        <Route path="/terms" element={<MainLayout showHeader={showHeader}><Terms /></MainLayout>} />
+        <Route path="/privacy" element={<MainLayout showHeader={showHeader}><Privacy /></MainLayout>} />
       </Routes>
     </div>
   );
@@ -119,13 +128,15 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <AppContent />
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
+      <SettingsProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <AppContent />
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </SettingsProvider>
     </Router>
   );
 }

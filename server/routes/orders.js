@@ -5,6 +5,8 @@ const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const Promo = require('../models/Promo');
 const { protect, adminOnly, requireMfa } = require('../middleware/auth');
+const { ALLOWED_PAYMENTS } = require('../config/subcategorySpecs');
+const telegram = require('../services/telegram');
 
 const router = express.Router();
 
@@ -40,8 +42,12 @@ router.post('/', protect, asyncHandler(async (req, res) => {
     };
   });
 
-  const allowedPayments = new Set(['cod', 'card', 'transfer']);
-  const finalPayment = allowedPayments.has(paymentMethod) ? paymentMethod : 'cod';
+  const allowedPayments = new Set(ALLOWED_PAYMENTS);
+  let finalPayment = paymentMethod;
+  if (!allowedPayments.has(paymentMethod)) {
+    console.warn(`order.payment.fallback: unknown payment "${paymentMethod}" -> "cod"`);
+    finalPayment = 'cod';
+  }
 
   // Prices come from the DB only — never trust client totals.
   const productIds = sanitized.map((i) => i.product);
@@ -140,6 +146,11 @@ router.post('/', protect, asyncHandler(async (req, res) => {
   // Clear cart after checkout
   await Cart.findOneAndUpdate({ user: req.user._id }, { items: [] });
 
+  // Fire-and-forget Telegram notification — never block the response on it.
+  telegram.sendOrderNotification(order).catch((err) =>
+    console.error('telegram.failed', err && err.message),
+  );
+
   res.status(201).json(order);
 }));
 
@@ -195,7 +206,6 @@ router.delete('/:id', protect, adminOnly, requireMfa, asyncHandler(async (req, r
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
-    console.log('Attempted to delete non-existent order with id:', req.params.id);
   }
   res.json({ message: 'Order deleted' });
 }));

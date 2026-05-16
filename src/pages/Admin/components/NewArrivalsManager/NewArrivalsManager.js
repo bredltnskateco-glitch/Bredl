@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiStar } from 'react-icons/fi';
 import { newArrivalsApi } from '../../../../api';
+import { formatCurrency } from '../../utils/format';
+import { toast } from '../Toast/Toast';
+import EmptyState from '../EmptyState/EmptyState';
 import './NewArrivalsManager.css';
 
 const NewArrivalsManager = () => {
@@ -99,23 +102,26 @@ const NewArrivalsManager = () => {
         setArrivals((prev) => prev.map((item) =>
           item._id === editingItem._id ? { ...item, ...updated } : item,
         ));
+        toast.success('New arrival updated');
       } else {
         const created = await newArrivalsApi.create(itemData);
         setArrivals((prev) => [created, ...prev]);
+        toast.success('New arrival created');
       }
       handleCloseModal();
     } catch (err) {
-      alert(err.message || 'Save failed');
+      toast.error(err.message || 'Save failed');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return;
+    if (!window.confirm('Delete this new arrival? It will disappear from the home page carousel.')) return;
     try {
       await newArrivalsApi.remove(id);
       setArrivals((prev) => prev.filter((item) => item._id !== id));
+      toast.success('New arrival deleted');
     } catch (err) {
-      alert(err.message || 'Delete failed');
+      toast.error(err.message || 'Delete failed');
     }
   };
 
@@ -145,6 +151,20 @@ const NewArrivalsManager = () => {
       {loading && <p>Loading new arrivals...</p>}
       {error && <p style={{ color: '#c00' }}>{error}</p>}
 
+      {!loading && !error && filteredArrivals.length === 0 && (
+        <EmptyState
+          icon={FiStar}
+          title={arrivals.length === 0 ? 'No new arrivals yet' : 'No arrivals match your search'}
+          hint={
+            arrivals.length === 0
+              ? 'Add a new arrival — it will appear in the carousel on the home page and as a shop entry point.'
+              : 'Try a different search term.'
+          }
+          actionLabel={arrivals.length === 0 ? 'Add new arrival' : undefined}
+          onAction={arrivals.length === 0 ? () => handleOpenModal() : undefined}
+        />
+      )}
+
       {/* Grid */}
       <div className="arrivals-grid">
         {filteredArrivals.map((item) => (
@@ -162,11 +182,11 @@ const NewArrivalsManager = () => {
               <div className="card-price">
                 {item.isOnSale && item.salePrice ? (
                   <>
-                    <span className="price-sale">{item.salePrice.toFixed(2)} TND</span>
-                    <span className="price-original">{item.regularPrice.toFixed(2)} TND</span>
+                    <span className="price-sale">{formatCurrency(item.salePrice, { decimals: 2 })}</span>
+                    <span className="price-original">{formatCurrency(item.regularPrice, { decimals: 2 })}</span>
                   </>
                 ) : (
-                  <span className="price-regular">{item.regularPrice.toFixed(2)} TND</span>
+                  <span className="price-regular">{formatCurrency(item.regularPrice, { decimals: 2 })}</span>
                 )}
               </div>
               <div className="card-sizes">

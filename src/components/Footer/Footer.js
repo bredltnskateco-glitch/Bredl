@@ -1,42 +1,81 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiInstagram, FiFacebook, FiTwitter, FiYoutube } from 'react-icons/fi';
-import { newsletterApi } from '../../api';
+import { newsletterApi, brandsApi, categoriesApi } from '../../api';
+import { useSettings } from '../../context/SettingsContext';
 import './Footer.css';
 
+const FALLBACK_BRAND_LINKS = [
+  { name: 'BREDL', to: '/shop?brand=Bredl' },
+  { name: 'NIKE SB', to: '/shop?brand=Nike%20SB' },
+  { name: 'VANS', to: '/shop?brand=Vans' },
+  { name: 'PALACE', to: '/shop?brand=Palace' },
+  { name: 'SPITFIRE', to: '/shop?brand=Spitfire' },
+];
+
 const Footer = () => {
+  const { settings } = useSettings();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
+  const [brandLinks, setBrandLinks] = useState(FALLBACK_BRAND_LINKS);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await brandsApi.featuredList();
+        if (cancelled) return;
+        if (Array.isArray(data) && data.length > 0) {
+          setBrandLinks(data.map((b) => ({
+            name: (b.name || '').toUpperCase(),
+            to: b.href || `/shop?brand=${encodeURIComponent((b.name || '').toLowerCase().replace(/\s+/g, '-'))}`,
+          })));
+        }
+      } catch (_err) {
+        // keep fallback list
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Top-level shop categories are pulled from the same /categories endpoint
+  // the header uses, so the footer never lists slugs that don't exist server-side.
+  const [shopCategories, setShopCategories] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await categoriesApi.list();
+        if (cancelled || !Array.isArray(data)) return;
+        setShopCategories(data.slice(0, 5).map((c) => ({
+          name: (c.name || c.slug || '').toUpperCase(),
+          to: `/shop/${c.slug}`,
+        })));
+      } catch (_err) {
+        // leave empty — section will hide
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const footerLinks = {
     enlaces: [
-      { name: 'POLICY', to: '/shop' },
-      { name: 'OUR STORE', to: '/shop' },
-      { name: 'SEARCH', to: '/shop' },
+      { name: 'TERMS', to: '/terms' },
+      { name: 'PRIVACY', to: '/privacy' },
+      { name: 'SHOP ALL', to: '/shop' },
     ],
-    brands: [
-      { name: 'BREDL', to: '/shop?brand=bredl' },
-      { name: 'NIKE SB', to: '/shop?brand=nike-sb' },
-      { name: 'ADIDAS', to: '/shop?brand=adidas' },
-      { name: 'VANS PRO', to: '/shop?brand=vans' },
-      { name: 'PALACE', to: '/shop?brand=palace' },
-    ],
-    categories: [
-      { name: 'NEW ARRIVALS', to: '/shop' },
-      { name: 'CLOTHING', to: '/shop/streetwear' },
-      { name: 'SHOES', to: '/shop/shoes' },
-      { name: 'HARDWARE', to: '/shop/skate' },
-      { name: 'SALES', to: '/shop' },
-    ],
+    brands: brandLinks,
+    categories: shopCategories,
   };
 
+  const socials = settings?.socials || {};
   const social = [
-    { Icon: FiInstagram, label: 'Instagram', href: 'https://www.instagram.com' },
-    { Icon: FiFacebook, label: 'Facebook', href: 'https://www.facebook.com' },
-    { Icon: FiTwitter, label: 'Twitter', href: 'https://twitter.com' },
-    { Icon: FiYoutube, label: 'YouTube', href: 'https://www.youtube.com' },
-  ];
+    { Icon: FiInstagram, label: 'Instagram', href: socials.instagram },
+    { Icon: FiFacebook, label: 'Facebook', href: socials.facebook },
+    { Icon: FiTwitter, label: 'Twitter', href: socials.twitter },
+    { Icon: FiYoutube, label: 'YouTube', href: socials.youtube },
+  ].filter((s) => s.href);
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -59,11 +98,21 @@ const Footer = () => {
       <div className="footer-container">
         <div className="footer-main">
           <div className="footer-brand">
-            <h2 className="footer-logo">BREDL</h2>
+            <h2 className="footer-logo">{settings?.storeName || 'BREDL'}</h2>
             <p className="footer-description">
-              Your local skate shop in Barcelona since 2010.
-              Premium skate gear, shoes, and clothing from the best brands.
+              {settings?.storeTagline || 'Your local skate shop in Barcelona since 2010. Premium skate gear, shoes, and clothing from the best brands.'}
             </p>
+            {(settings?.storeEmail || settings?.storePhone || settings?.storeAddress) && (
+              <ul className="footer-contact">
+                {settings?.storeAddress && <li>{settings.storeAddress}</li>}
+                {settings?.storeEmail && (
+                  <li><a href={`mailto:${settings.storeEmail}`}>{settings.storeEmail}</a></li>
+                )}
+                {settings?.storePhone && (
+                  <li><a href={`tel:${settings.storePhone}`}>{settings.storePhone}</a></li>
+                )}
+              </ul>
+            )}
             <div className="footer-social">
               {social.map(({ Icon, label, href }) => (
                 <a
@@ -150,10 +199,10 @@ const Footer = () => {
 
         <div className="footer-bottom">
           <p className="copyright">
-            Copyright © {new Date().getFullYear()}, BREDL Macba. All rights reserved.
+            Copyright © {new Date().getFullYear()}, {settings?.storeName || 'BREDL'}. All rights reserved.
           </p>
           <div className="payment-methods">
-            <span className="payment-text">Visa · Mastercard · PayPal · Apple Pay</span>
+            <span className="payment-text">Cash on delivery · Bank transfer · Flouci</span>
           </div>
         </div>
       </div>

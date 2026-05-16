@@ -2,6 +2,7 @@ import api, { ensureCsrfToken } from './client';
 
 export const authApi = {
   login: (email, password) => api.post('/auth/login', { email, password }),
+  loginWithGoogle: (credential) => api.post('/auth/google', { credential }),
   register: (payload) => api.post('/auth/register', payload),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
@@ -27,11 +28,43 @@ export const productsApi = {
   remove: (id) => api.del(`/products/${id}`),
 };
 
+// Single-flight + 60s TTL memo for categories. Concurrent callers share one
+// in-flight request; mutations invalidate the cache so subsequent reads refetch.
+const CATEGORIES_TTL_MS = 60_000;
+let _categoriesPromise = null;
+let _categoriesAt = 0;
+const invalidateCategories = () => { _categoriesPromise = null; _categoriesAt = 0; };
+
 export const categoriesApi = {
-  list: () => api.get('/categories'),
-  create: (payload) => api.post('/categories', payload),
-  update: (id, payload) => api.put(`/categories/${id}`, payload),
-  remove: (id) => api.del(`/categories/${id}`),
+  list: () => {
+    const fresh = _categoriesPromise && (Date.now() - _categoriesAt < CATEGORIES_TTL_MS);
+    if (!fresh) {
+      _categoriesAt = Date.now();
+      _categoriesPromise = api.get('/categories').catch((err) => {
+        // Don't poison the cache with a failure — let the next caller retry.
+        _categoriesPromise = null;
+        _categoriesAt = 0;
+        throw err;
+      });
+    }
+    return _categoriesPromise;
+  },
+  create: async (payload) => {
+    const r = await api.post('/categories', payload);
+    invalidateCategories();
+    return r;
+  },
+  update: async (id, payload) => {
+    const r = await api.put(`/categories/${id}`, payload);
+    invalidateCategories();
+    return r;
+  },
+  remove: async (id) => {
+    const r = await api.del(`/categories/${id}`);
+    invalidateCategories();
+    return r;
+  },
+  invalidate: invalidateCategories,
 };
 
 export const cartApi = {
@@ -98,6 +131,110 @@ export const promosApi = {
   create: (payload) => api.post('/promos', payload),
   update: (id, payload) => api.put(`/promos/${id}`, payload),
   remove: (id) => api.del(`/promos/${id}`),
+};
+
+// Single-flight + 60s TTL memo for public site settings. Used by Footer,
+// AnnouncementBar, Header. Admin GET/save bypass the memo and invalidate it.
+const SETTINGS_TTL_MS = 60_000;
+let _settingsPromise = null;
+let _settingsAt = 0;
+const invalidateSettings = () => { _settingsPromise = null; _settingsAt = 0; };
+
+// Collections + Brands — drive Shop FeaturedCollections / TopBrands strips.
+const COLLECTIONS_TTL_MS = 60_000;
+let _collectionsPromise = null;
+let _collectionsAt = 0;
+const invalidateCollections = () => { _collectionsPromise = null; _collectionsAt = 0; };
+
+export const collectionsApi = {
+  list: () => {
+    const fresh = _collectionsPromise && (Date.now() - _collectionsAt < COLLECTIONS_TTL_MS);
+    if (!fresh) {
+      _collectionsAt = Date.now();
+      _collectionsPromise = api.get('/collections').catch((err) => {
+        _collectionsPromise = null;
+        _collectionsAt = 0;
+        throw err;
+      });
+    }
+    return _collectionsPromise;
+  },
+  adminList: () => api.get('/collections/all'),
+  create: async (payload) => {
+    const r = await api.post('/collections', payload);
+    invalidateCollections();
+    return r;
+  },
+  update: async (id, payload) => {
+    const r = await api.put(`/collections/${id}`, payload);
+    invalidateCollections();
+    return r;
+  },
+  remove: async (id) => {
+    const r = await api.del(`/collections/${id}`);
+    invalidateCollections();
+    return r;
+  },
+  invalidate: invalidateCollections,
+};
+
+const BRANDS_TTL_MS = 60_000;
+let _featuredBrandsPromise = null;
+let _featuredBrandsAt = 0;
+const invalidateBrands = () => { _featuredBrandsPromise = null; _featuredBrandsAt = 0; };
+
+export const brandsApi = {
+  list: () => api.get('/brands'),
+  featuredList: () => {
+    const fresh = _featuredBrandsPromise && (Date.now() - _featuredBrandsAt < BRANDS_TTL_MS);
+    if (!fresh) {
+      _featuredBrandsAt = Date.now();
+      _featuredBrandsPromise = api.get('/brands/featured').catch((err) => {
+        _featuredBrandsPromise = null;
+        _featuredBrandsAt = 0;
+        throw err;
+      });
+    }
+    return _featuredBrandsPromise;
+  },
+  create: async (payload) => {
+    const r = await api.post('/brands', payload);
+    invalidateBrands();
+    return r;
+  },
+  update: async (id, payload) => {
+    const r = await api.put(`/brands/${id}`, payload);
+    invalidateBrands();
+    return r;
+  },
+  remove: async (id) => {
+    const r = await api.del(`/brands/${id}`);
+    invalidateBrands();
+    return r;
+  },
+  invalidate: invalidateBrands,
+};
+
+export const settingsApi = {
+  publicGet: () => {
+    const fresh = _settingsPromise && (Date.now() - _settingsAt < SETTINGS_TTL_MS);
+    if (!fresh) {
+      _settingsAt = Date.now();
+      _settingsPromise = api.get('/settings/public').catch((err) => {
+        _settingsPromise = null;
+        _settingsAt = 0;
+        throw err;
+      });
+    }
+    return _settingsPromise;
+  },
+  adminGet: () => api.get('/settings'),
+  save: async (payload) => {
+    const r = await api.put('/settings', payload);
+    invalidateSettings();
+    return r;
+  },
+  invalidate: invalidateSettings,
 };
 
 export { ensureCsrfToken };

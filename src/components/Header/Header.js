@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMenu, FiX, FiUser, FiShoppingBag, FiHeart, FiLogOut, FiSettings, FiChevronDown } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { categoriesApi } from '../../api';
 import './Header.css';
 
 const Header = ({ isVisible = true }) => {
@@ -11,8 +12,22 @@ const Header = ({ isVisible = true }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(null);
+  const [adminCategories, setAdminCategories] = useState([]);
   const dropdownTimeoutRef = useRef(null);
   const userDropdownTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await categoriesApi.list();
+        if (!cancelled && Array.isArray(data)) setAdminCategories(data);
+      } catch (err) {
+        // Header should not break if categories fail to load
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const { openCart, getCartItemsCount } = useCart();
@@ -50,81 +65,16 @@ const Header = ({ isVisible = true }) => {
     }, 200);
   };
 
-  const navItems = [
-    { 
-      name: 'STREETWEAR', 
-      link: '/shop/streetwear',
-      dropdown: {
-        categories: ['T-Shirts & Tops', 'Hoodies', 'Sweatshirts', 'Jackets', 'Pants', 'Jeans', 'Shorts', 'Shirts', 'Sweaters'],
-        brands: ['Carhartt WIP', 'Dickies', 'Gramicci', 'Patagonia', 'Nike ACG', 'adidas Originals', 'A.LAB', 'Dravus'],
-        featured: 'NEW ARRIVALS'
-      }
-    },
-    { 
-      name: 'SHOES', 
-      link: '/shop/shoes',
-      dropdown: {
-        categories: ['Skate Shoes', 'Sneakers', 'Winter Shoes', 'Sandals', 'Shoe Accessories'],
-        brands: ['Nike SB', 'adidas Skateboarding', 'Vans', 'New Balance Numeric', 'Converse', 'DC', 'Globe', 'Osiris'],
-        featured: 'BEST SELLERS'
-      }
-    },
-    { 
-      name: 'ACCESSORIES', 
-      link: '/shop/accessories',
-      dropdown: {
-        categories: ['Beanies', 'Caps', 'Backpacks', 'Bags', 'Sunglasses', 'Wallets', 'Belts', 'Socks', 'Watches'],
-        brands: ['Carhartt WIP', 'Dickies', 'Nixon', 'Herschel', 'Thrasher', 'Santa Cruz', 'Got Bag'],
-        featured: 'TRENDING NOW'
-      }
-    },
-    { 
-      name: 'SKATE', 
-      link: '/shop/skate',
-      dropdown: {
-        categories: ['Skateboard Decks', 'Complete Skateboards', 'Trucks', 'Wheels', 'Bearings', 'Griptape', 'Hardware', 'Skate Tools', 'Protective Gear'],
-        brands: ['Hockey Skateboards', 'Santa Cruz', 'Polar Skate', 'DGK', 'Zero', 'Sour Solution', 'Spitfire', 'Independent', 'Bones'],
-        featured: 'PRO SETUPS'
-      }
-    },
-    { 
-      name: 'SURF', 
-      link: '/shop/surf',
-      dropdown: {
-        categories: ['Surfboards', 'Wetsuits', 'Boardshorts', 'Rash Guards', 'Surf Accessories', 'Fins', 'Leashes', 'Surf Wax'],
-        brands: ['Rip Curl', 'Billabong', 'Quiksilver', 'Hurley', 'RVCA', 'Volcom', "O'Neill", 'Vissla'],
-        featured: 'WETSUIT GUIDE'
-      }
-    },
-    { 
-      name: 'SNOWBOARD', 
-      link: '/shop/snowboard',
-      dropdown: {
-        categories: ['Snowboards', 'Snowboard Boots', 'Bindings', 'Snowboard Jackets', 'Snowboard Pants', 'Goggles', 'Helmets', 'Gloves'],
-        brands: ['Burton', 'Volcom', 'Jones', 'Ride', 'Union', 'ThirtyTwo', 'Anon', 'Oakley'],
-        featured: 'WINTER GEAR'
-      }
-    },
-    { 
-      name: 'BRANDS', 
-      link: '/shop',
-      dropdown: {
-        categories: ['All Brands A-Z', 'Top Brands', 'New Brands', 'Exclusive Brands'],
-        brands: ['Nike SB', 'adidas', 'Carhartt WIP', 'Patagonia', 'Vans', 'Dickies', 'The North Face', 'Volcom', 'Burton', 'Santa Cruz'],
-        featured: 'BRAND SPOTLIGHT'
-      }
-    },
-    { 
-      name: 'SALE', 
-      link: '/shop', 
-      isSale: true,
-      dropdown: {
-        categories: ['All Sale Items', 'Streetwear Sale', 'Shoes Sale', 'Accessories Sale', 'Skate Sale', 'Snowboard Sale'],
-        brands: ['Up to 30% Off', 'Up to 50% Off', 'Up to 70% Off', 'Last Chance'],
-        featured: 'BEST DEALS'
-      }
-    },
-  ];
+  // Navbar is fully driven by the categories API. Adding a category in admin
+  // adds a top-level item; adding a subcategory populates the hover dropdown.
+  const navItems = useMemo(() => adminCategories.map((c) => ({
+    name: (c.name || c.slug || '').toUpperCase(),
+    link: `/shop/${c.slug}`,
+    parentSlug: c.slug,
+    dropdown: (c.subcategories && c.subcategories.length > 0)
+      ? { items: c.subcategories.map((s) => ({ name: s.name, slug: s.slug })) }
+      : null,
+  })), [adminCategories]);
 
   const handleMouseEnter = (index) => {
     if (dropdownTimeoutRef.current) {
@@ -194,7 +144,7 @@ const Header = ({ isVisible = true }) => {
               const isExpanded = mobileExpanded === index;
               return (
                 <li
-                  key={index}
+                  key={item.parentSlug || index}
                   className={`nav-item ${activeDropdown === index ? 'dropdown-active' : ''} ${isExpanded ? 'mobile-expanded' : ''}`}
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
@@ -202,7 +152,7 @@ const Header = ({ isVisible = true }) => {
                   <div className="nav-link-row">
                     <Link
                       to={item.link || '/shop'}
-                      className={`nav-link ${item.isSale ? 'sale-link' : ''}`}
+                      className="nav-link"
                       onClick={closeMenu}
                     >
                       <RollingText text={item.name} />
@@ -227,42 +177,18 @@ const Header = ({ isVisible = true }) => {
                     >
                       <div className="dropdown-inner">
                         <div className="dropdown-column">
-                          <h4 className="dropdown-title">Categories</h4>
                           <ul className="dropdown-list">
-                            {item.dropdown.categories.map((cat, catIndex) => (
-                              <li key={catIndex}>
+                            {item.dropdown.items.map((sub) => (
+                              <li key={sub.slug}>
                                 <Link
-                                  to={`/shop/${cat.toLowerCase().replace(/\s+/g, '-')}`}
+                                  to={`/shop/${item.parentSlug}?subcategory=${sub.slug}`}
                                   onClick={closeMenu}
                                 >
-                                  {cat}
+                                  {sub.name}
                                 </Link>
                               </li>
                             ))}
                           </ul>
-                        </div>
-                        <div className="dropdown-column">
-                          <h4 className="dropdown-title">Top Brands</h4>
-                          <ul className="dropdown-list">
-                            {item.dropdown.brands.map((brand, brandIndex) => (
-                              <li key={brandIndex}>
-                                <Link
-                                  to={`/shop?brand=${brand.toLowerCase().replace(/\s+/g, '-')}`}
-                                  onClick={closeMenu}
-                                >
-                                  {brand}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="dropdown-column dropdown-featured">
-                          <div className="featured-box">
-                            <span className="featured-label">{item.dropdown.featured}</span>
-                            <Link to={`/shop`} className="featured-link" onClick={closeMenu}>
-                              Shop Now →
-                            </Link>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -288,7 +214,13 @@ const Header = ({ isVisible = true }) => {
               onMouseEnter={handleUserMouseEnter}
               onMouseLeave={handleUserMouseLeave}
             >
-              <button className="action-btn user-btn" aria-label="My Account">
+              <button
+                className="action-btn user-btn"
+                aria-label="My Account"
+                aria-haspopup="menu"
+                aria-expanded={userDropdownOpen}
+                onClick={() => setUserDropdownOpen((open) => !open)}
+              >
                 <span className="user-avatar-small">
                   {user?.firstName?.charAt(0)}
                 </span>

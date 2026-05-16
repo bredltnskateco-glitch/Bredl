@@ -24,11 +24,10 @@ const productSchema = new mongoose.Schema({
 
   isNew: { type: Boolean, default: false },
   isFeatured: { type: Boolean, default: false },
+  isPromo: { type: Boolean, default: false },
 
   // Skate-specific
   deckWidth: String,
-  deckLength: String,
-  wheelbase: String,
   concave: String,
   material: String,
   truckSize: String,
@@ -54,5 +53,8 @@ productSchema.set('toJSON', { virtuals: true });
 productSchema.set('toObject', { virtuals: true });
 
 productSchema.index({ name: 'text', brand: 'text', description: 'text', tags: 'text' });
+productSchema.index({ category: 1, createdAt: -1 });
+productSchema.index({ category: 1, subcategory: 1 });
+productSchema.index({ isFeatured: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Product', productSchema);

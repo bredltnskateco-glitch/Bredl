@@ -1,0 +1,44 @@
+.legal-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+  color: #1a1a1a;
+  line-height: 1.7;
+}
+
+.legal-page h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+}
+
+.legal-page .legal-updated {
+  color: #6b6b6b;
+  font-size: 0.9rem;
+  margin: 0 0 2.5rem;
+}
+
+.legal-page h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 2rem 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.legal-page p,
+.legal-page li {
+  font-size: 1rem;
+  color: #2a2a2a;
+}
+
+.legal-page ul {
+  padding-left: 1.25rem;
+}
+
+.legal-page a {
+  color: #1a1a1a;
+  text-decoration: underline;
+}

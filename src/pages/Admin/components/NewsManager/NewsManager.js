@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiStar } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX, FiStar, FiFileText } from 'react-icons/fi';
 import { newsApi } from '../../../../api';
+import { toast } from '../Toast/Toast';
+import EmptyState from '../EmptyState/EmptyState';
 import './NewsManager.css';
 
 const NewsManager = () => {
@@ -34,12 +36,21 @@ const NewsManager = () => {
         featured: false
     });
 
+    // <input type="date"> requires YYYY-MM-DD; coerce free-text legacy values
+    // (e.g. "January 20, 2026") so they populate the picker on edit.
+    const toIsoDate = (value) => {
+        if (!value) return '';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '';
+        return parsed.toISOString().slice(0, 10);
+    };
+
     const handleOpenModal = (item = null) => {
         if (item) {
             setEditingItem(item);
             setFormData({
                 title: item.title || '',
-                date: item.date || '',
+                date: toIsoDate(item.date),
                 image: item.image || '',
                 link: item.link || '',
                 body: item.body || '',
@@ -47,14 +58,9 @@ const NewsManager = () => {
             });
         } else {
             setEditingItem(null);
-            const today = new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
             setFormData({
                 title: '',
-                date: today,
+                date: new Date().toISOString().slice(0, 10),
                 image: '',
                 link: '',
                 body: '',
@@ -94,9 +100,11 @@ const NewsManager = () => {
                 setNews((prev) => prev.map((item) =>
                     item._id === editingItem._id ? { ...item, ...updated } : item,
                 ));
+                toast.success('Article updated');
             } else {
                 const created = await newsApi.create(itemData);
                 setNews((prev) => [created, ...prev]);
+                toast.success('Article published');
             }
             // If we set this one to featured, others will have been unfeatured server-side
             if (itemData.featured) {
@@ -104,17 +112,18 @@ const NewsManager = () => {
             }
             handleCloseModal();
         } catch (err) {
-            alert(err.message || 'Save failed');
+            toast.error(err.message || 'Save failed');
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this news article?')) return;
+        if (!window.confirm('Delete this news article? It will disappear from the home page news section.')) return;
         try {
             await newsApi.remove(id);
             setNews((prev) => prev.filter((item) => item._id !== id));
+            toast.success('Article deleted');
         } catch (err) {
-            alert(err.message || 'Delete failed');
+            toast.error(err.message || 'Delete failed');
         }
     };
 
@@ -124,8 +133,9 @@ const NewsManager = () => {
             // server unfeatures siblings; reload
             await load();
             void updated;
+            toast.success(item.featured ? 'Removed from featured' : 'Set as featured article');
         } catch (err) {
-            alert(err.message || 'Update failed');
+            toast.error(err.message || 'Update failed');
         }
     };
 
@@ -155,60 +165,76 @@ const NewsManager = () => {
             {loading && <p>Loading news...</p>}
             {error && <p style={{ color: '#c00' }}>{error}</p>}
 
-            {/* News Table */}
-            <div className="news-table-container">
-                <table className="news-table">
-                    <thead>
-                        <tr>
-                            <th>Article</th>
-                            <th>Date</th>
-                            <th>Featured</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredNews.map((item) => (
-                            <tr key={item._id} className={item.featured ? 'featured-row' : ''}>
-                                <td>
-                                    <div className="article-cell">
-                                        <img src={item.image} alt={item.title} className="article-thumb" />
-                                        <div className="article-info">
-                                            <span className="article-title">{item.title}</span>
-                                            {item.link ? (
-                                                <a href={item.link} className="article-link" target="_blank" rel="noopener noreferrer">
-                                                    {item.link}
-                                                </a>
-                                            ) : (
-                                                <span className="article-link muted">In-app article</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="date-cell">{item.date}</td>
-                                <td>
-                                    <button
-                                        className={`featured-btn ${item.featured ? 'active' : ''}`}
-                                        onClick={() => toggleFeatured(item)}
-                                        title={item.featured ? 'Remove from featured' : 'Set as featured'}
-                                    >
-                                        <FiStar />
-                                    </button>
-                                </td>
-                                <td>
-                                    <div className="action-buttons">
-                                        <button className="action-btn edit" onClick={() => handleOpenModal(item)}>
-                                            <FiEdit2 />
-                                        </button>
-                                        <button className="action-btn delete" onClick={() => handleDelete(item._id)}>
-                                            <FiTrash2 />
-                                        </button>
-                                    </div>
-                                </td>
+            {!loading && !error && filteredNews.length === 0 && (
+                <EmptyState
+                    icon={FiFileText}
+                    title={news.length === 0 ? 'No news articles yet' : 'No articles match your search'}
+                    hint={
+                        news.length === 0
+                            ? 'Publish a news article — it will appear in the "BREDL News" section on the home page.'
+                            : 'Try a different search term.'
+                    }
+                    actionLabel={news.length === 0 ? 'Add article' : undefined}
+                    onAction={news.length === 0 ? () => handleOpenModal() : undefined}
+                />
+            )}
+
+            {!loading && !error && filteredNews.length > 0 && (
+                <div className="admin-data-table news-table-container">
+                    <table className="news-table">
+                        <thead>
+                            <tr>
+                                <th>Article</th>
+                                <th>Date</th>
+                                <th>Featured</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {filteredNews.map((item) => (
+                                <tr key={item._id} className={item.featured ? 'featured-row' : ''}>
+                                    <td data-label="Article">
+                                        <div className="article-cell">
+                                            <img src={item.image} alt={item.title} className="article-thumb" />
+                                            <div className="article-info">
+                                                <span className="article-title">{item.title}</span>
+                                                {item.link ? (
+                                                    <a href={item.link} className="article-link" target="_blank" rel="noopener noreferrer">
+                                                        {item.link}
+                                                    </a>
+                                                ) : (
+                                                    <span className="article-link muted">In-app article</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="date-cell" data-label="Date">{item.date}</td>
+                                    <td data-label="Featured">
+                                        <button
+                                            className={`featured-btn ${item.featured ? 'active' : ''}`}
+                                            onClick={() => toggleFeatured(item)}
+                                            aria-label={item.featured ? 'Remove from featured' : 'Set as featured'}
+                                            title={item.featured ? 'Remove from featured' : 'Set as featured'}
+                                        >
+                                            <FiStar />
+                                        </button>
+                                    </td>
+                                    <td data-label="Actions">
+                                        <div className="action-buttons">
+                                            <button className="action-btn edit" aria-label="Edit article" onClick={() => handleOpenModal(item)}>
+                                                <FiEdit2 />
+                                            </button>
+                                            <button className="action-btn delete" aria-label="Delete article" onClick={() => handleDelete(item._id)}>
+                                                <FiTrash2 />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* Modal */}
             {showModal && (
@@ -235,11 +261,10 @@ const NewsManager = () => {
                                 <div className="form-group">
                                     <label>Date</label>
                                     <input
-                                        type="text"
+                                        type="date"
                                         name="date"
                                         value={formData.date}
                                         onChange={handleInputChange}
-                                        placeholder="January 20, 2026"
                                         required
                                     />
                                 </div>

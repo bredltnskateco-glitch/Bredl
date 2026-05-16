@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { FiTrendingUp, FiUsers, FiShoppingCart, FiDollarSign, FiBox } from 'react-icons/fi';
 import { analyticsApi } from '../../../../api';
+import { formatCurrency } from '../../utils/format';
 import './AnalyticsDashboard.css';
-
-const formatCurrency = (n) =>
-  `${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} TND`;
 
 const AnalyticsDashboard = () => {
   const [overview, setOverview] = useState(null);

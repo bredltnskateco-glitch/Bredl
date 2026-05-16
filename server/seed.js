@@ -11,6 +11,10 @@ const Order = require('./models/Order');
 const Cart = require('./models/Cart');
 const Wishlist = require('./models/Wishlist');
 const NewsletterSubscriber = require('./models/NewsletterSubscriber');
+const Promo = require('./models/Promo');
+const Brand = require('./models/Brand');
+const Collection = require('./models/Collection');
+const Settings = require('./models/Settings');
 
 const categories = [
   {
@@ -69,7 +73,7 @@ const categories = [
 const products = [
   {
     name: 'BREDL SPORTECH TRACKSUIT JACKET BLACK',
-    brand: 'BREDL',
+    brand: 'Bredl',
     category: 'streetwear',
     subcategory: 'jackets',
     description: 'Lightweight tracksuit jacket with technical fabric.',
@@ -107,15 +111,13 @@ const products = [
     image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=900&fit=crop',
     hoverImage: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=900&fit=crop&sat=-100',
     deckWidth: '8.25"',
-    deckLength: '32"',
-    wheelbase: '14.25"',
     concave: 'Medium',
     material: '7-Ply Maple',
     isNew: true,
   },
   {
     name: 'BREDL SPORTECH TRACKSUIT PANTS GREY',
-    brand: 'BREDL',
+    brand: 'Bredl',
     category: 'streetwear',
     subcategory: 'pants',
     description: 'Tapered tracksuit pants with elastic waist.',
@@ -199,6 +201,40 @@ const products = [
     image: 'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=800&h=900&fit=crop',
     sizes: ['S', 'M', 'L', 'XL', 'XXL'],
   },
+  {
+    name: 'INDEPENDENT STAGE 11 TRUCKS 149MM',
+    brand: 'Independent',
+    category: 'skate',
+    subcategory: 'trucks',
+    description: 'Forged baseplate trucks, raw silver finish.',
+    price: 62.0,
+    stock: 90,
+    image: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=800&h=900&fit=crop',
+    truckSize: '149',
+    axleWidth: '8.5"',
+    isNew: true,
+  },
+  {
+    name: 'BONES REDS BEARINGS',
+    brand: 'Bones',
+    category: 'skate',
+    subcategory: 'bearings',
+    description: 'Classic Bones Reds — fast, smooth, durable.',
+    price: 22.0,
+    stock: 200,
+    image: 'https://images.unsplash.com/photo-1564429238909-38f12a608ec4?w=800&h=900&fit=crop',
+  },
+  {
+    name: 'BREDL BLACK DIAMOND GRIPTAPE',
+    brand: 'Bredl',
+    category: 'skate',
+    subcategory: 'griptape',
+    description: 'Coarse 9" grip, perforated for clean application.',
+    price: 12.0,
+    stock: 250,
+    image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=900&fit=crop',
+    isFeatured: true,
+  },
 ];
 
 const newsItems = [
@@ -222,9 +258,93 @@ const newsItems = [
     date: 'December 5, 2025',
     image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?w=900&h=600&fit=crop',
     link: '#news-3',
-    body: 'Limited collaboration between Nike SB and our in-house BREDL line.',
+    body: 'Limited collaboration between Nike SB and our in-house Bredl line.',
   },
 ];
+
+const brands = [
+  { name: 'Bredl', featured: true, order: 1 },
+  { name: 'Nike SB', featured: true, order: 2 },
+  { name: 'Vans', featured: true, order: 3 },
+  { name: 'Palace', featured: true, order: 4 },
+  { name: 'Spitfire', featured: true, order: 5 },
+  { name: 'Independent', featured: true, order: 6 },
+  { name: 'Bones', featured: true, order: 7 },
+];
+
+const collections = [
+  {
+    title: 'Skate Essentials',
+    subtitle: 'Decks, trucks, wheels and bearings ready for street sessions.',
+    image: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=1200&h=800&fit=crop',
+    href: '/shop/skate',
+    order: 1,
+    active: true,
+  },
+  {
+    title: 'Fresh Streetwear',
+    subtitle: 'Graphic tees, hoodies and technical layers from the latest drops.',
+    image: 'https://images.unsplash.com/photo-1523398002811-999ca8dec234?w=1200&h=800&fit=crop',
+    href: '/shop/streetwear',
+    order: 2,
+    active: true,
+  },
+  {
+    title: 'Skate Shoes',
+    subtitle: 'Durable silhouettes from Nike SB, Vans and more.',
+    image: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=1200&h=800&fit=crop',
+    href: '/shop/shoes',
+    order: 3,
+    active: true,
+  },
+];
+
+const promos = [
+  {
+    code: 'BREDL10',
+    description: 'Welcome discount for local shoppers',
+    discountType: 'percent',
+    discountValue: 10,
+    minOrderTotal: 100,
+    maxUses: 500,
+    isActive: true,
+  },
+  {
+    code: 'FREESHIP',
+    description: 'Fixed amount shipping credit',
+    discountType: 'fixed',
+    discountValue: 15,
+    minOrderTotal: 150,
+    maxUses: null,
+    isActive: true,
+  },
+];
+
+const settings = {
+  storeName: 'BREDL',
+  storeTagline: 'Your local skate shop in Barcelona since 2010. Premium skate gear, shoes, and clothing from the best brands.',
+  storeEmail: 'hello@bredl.test',
+  storePhone: '+216 00 000 000',
+  storeAddress: 'Barcelona, Spain',
+  currency: 'TND',
+  timezone: 'Africa/Tunis',
+  socials: {
+    instagram: 'https://www.instagram.com',
+    facebook: 'https://www.facebook.com',
+    twitter: 'https://twitter.com',
+    youtube: 'https://www.youtube.com',
+  },
+  announcement: {
+    enabled: true,
+    text: 'Use code BREDL10 for 10% off orders over 100 TND.',
+    href: '/shop',
+  },
+  notifications: {
+    emailEnabled: true,
+    orderEnabled: true,
+    marketingEnabled: false,
+  },
+};
 
 const run = async () => {
   await connectDB();
@@ -240,6 +360,10 @@ const run = async () => {
     Cart.deleteMany({}),
     Wishlist.deleteMany({}),
     NewsletterSubscriber.deleteMany({}),
+    Promo.deleteMany({}),
+    Brand.deleteMany({}),
+    Collection.deleteMany({}),
+    Settings.deleteMany({}),
   ]);
 
   console.log('Seeding users...');
@@ -287,6 +411,16 @@ const run = async () => {
 
   console.log('Seeding news...');
   await News.create(newsItems);
+
+  console.log('Seeding brands, collections, promos, and settings...');
+  await Promise.all([
+    Brand.create(brands),
+    Collection.create(collections),
+    Promo.create(promos),
+  ]);
+  const settingsDoc = await Settings.getSingleton();
+  Object.assign(settingsDoc, settings);
+  await settingsDoc.save();
 
   console.log('Done. Admin: admin@rufusmacba.com / Admin#Demo2026');
   console.log('       Client: client@test.com / Client#Demo2026');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiGrid, FiList, FiFilter, FiChevronDown } from 'react-icons/fi';
-import { sortOptions } from './shopData';
+import { SORT_OPTIONS as sortOptions } from '../../constants/shopFilters';
 import './ShopToolbar.css';
 
 const ShopToolbar = ({

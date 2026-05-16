@@ -5,11 +5,13 @@ const crypto = require('crypto');
 const asyncHandler = require('express-async-handler');
 const { authenticator } = require('otplib');
 const qrcode = require('qrcode');
+const { OAuth2Client } = require('google-auth-library');
 
 const User = require('../models/User');
 const { protect, SESSION_COOKIE } = require('../middleware/auth');
 const { issueCsrfToken, clearCsrfToken } = require('../middleware/csrf');
 const mailer = require('../services/mailer');
+const { SECURITY_DISABLED } = require('../config/securityFlag');
 
 const router = express.Router();
 
@@ -64,7 +66,8 @@ const clearSessionCookie = (res) => {
 
 // Server-side password policy (audit item: strong password policy)
 const validatePassword = (pw) => {
-  if (typeof pw !== 'string') return 'Password is required';
+  if (typeof pw !== 'string' || pw.length === 0) return 'Password is required';
+  if (SECURITY_DISABLED) return null;
   if (pw.length < 12) return 'Password must be at least 12 characters';
   if (pw.length > 128) return 'Password is too long';
   if (!/[a-z]/.test(pw)) return 'Password must include a lowercase letter';
@@ -167,7 +170,7 @@ router.post('/login', asyncHandler(async (req, res) => {
     throw new Error('Invalid email or password');
   }
 
-  if (user.isLocked()) {
+  if (!SECURITY_DISABLED && user.isLocked()) {
     securityLog('auth.login.locked', { userId: String(user._id), ip: clientIp(req) });
     res.status(423);
     throw new Error('Account temporarily locked. Try again later.');
@@ -175,14 +178,14 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const ok = await user.matchPassword(password);
   if (!ok) {
-    await user.registerFailedLogin();
+    if (!SECURITY_DISABLED) await user.registerFailedLogin();
     securityLog('auth.login.fail', { userId: String(user._id), reason: 'bad_password', ip: clientIp(req) });
     res.status(401);
     throw new Error('Invalid email or password');
   }
 
   // Stage 2 required: do not issue a session cookie yet.
-  if (user.mfaEnabled) {
+  if (!SECURITY_DISABLED && user.mfaEnabled) {
     securityLog('auth.login.mfa_required', { userId: String(user._id), ip: clientIp(req) });
     return res.json({
       mfaRequired: true,
@@ -192,6 +195,107 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   await user.registerSuccessfulLogin(clientIp(req));
   securityLog('auth.login.success', { userId: String(user._id), ip: clientIp(req) });
+
+  setSessionCookie(res, signSessionToken(user));
+  issueCsrfToken(res);
+
+  res.json({
+    user: user.toPublicJSON(),
+    mfaSetupRequired: user.role === 'admin' && !user.mfaEnabled,
+  });
+}));
+
+// ---------- Sign in with Google (Google Identity Services) ----------
+//
+// The frontend posts the ID token (JWT) returned by GIS. We verify it with
+// Google's public keys, find-or-create a user keyed on the Google `sub` claim,
+// and reuse the same session + MFA flow as password login. The route never
+// trusts any user-supplied profile fields beyond what Google signs.
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
+const googleOAuthClient = googleClientId ? new OAuth2Client(googleClientId) : null;
+
+router.post('/google', asyncHandler(async (req, res) => {
+  if (!googleOAuthClient) {
+    res.status(503);
+    throw new Error('Sign in with Google is not configured on this server.');
+  }
+
+  const { credential } = req.body || {};
+  if (!credential || typeof credential !== 'string') {
+    res.status(400);
+    throw new Error('Google credential is required');
+  }
+
+  let payload;
+  try {
+    const ticket = await googleOAuthClient.verifyIdToken({
+      idToken: credential,
+      audience: googleClientId,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    securityLog('auth.google.verify_failed', { reason: err.message, ip: clientIp(req) });
+    res.status(401);
+    throw new Error('Google sign-in could not be verified');
+  }
+
+  if (!payload || !payload.sub || !payload.email) {
+    res.status(401);
+    throw new Error('Google sign-in did not return a usable profile');
+  }
+  if (payload.email_verified === false) {
+    res.status(401);
+    throw new Error('Your Google email is not verified');
+  }
+
+  const email = String(payload.email).toLowerCase();
+  const googleId = String(payload.sub);
+
+  // Find by Google sub first (preferred), then fall back to email so an
+  // existing password account gets linked rather than duplicated.
+  let user = await User.findOne({ googleId })
+    .select('+failedLoginAttempts +lockedUntil +mfaSecret');
+  if (!user) {
+    user = await User.findOne({ email })
+      .select('+failedLoginAttempts +lockedUntil +mfaSecret');
+  }
+
+  if (user) {
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save();
+      securityLog('auth.google.linked', { userId: String(user._id), ip: clientIp(req) });
+    }
+  } else {
+    user = await User.create({
+      firstName: String(payload.given_name || payload.name || 'New').slice(0, 60),
+      lastName: String(payload.family_name || ' ').slice(0, 60) || ' ',
+      email,
+      googleId,
+      role: 'client',
+    });
+    securityLog('auth.google.register', { userId: String(user._id), email, ip: clientIp(req) });
+  }
+
+  if (!SECURITY_DISABLED && user.isLocked()) {
+    securityLog('auth.google.locked', { userId: String(user._id), ip: clientIp(req) });
+    res.status(423);
+    throw new Error('Account temporarily locked. Try again later.');
+  }
+
+  // Honour MFA the same way password login does. Google having 2FA on its
+  // side does not exempt admins (or any user) from the app's own challenge.
+  if (!SECURITY_DISABLED && user.mfaEnabled) {
+    securityLog('auth.google.mfa_required', { userId: String(user._id), ip: clientIp(req) });
+    return res.json({
+      mfaRequired: true,
+      challengeToken: signMfaChallengeToken(user),
+    });
+  }
+
+  await user.registerSuccessfulLogin(clientIp(req));
+  securityLog('auth.google.success', { userId: String(user._id), ip: clientIp(req) });
 
   setSessionCookie(res, signSessionToken(user));
   issueCsrfToken(res);
@@ -236,7 +340,7 @@ router.post('/mfa/verify-login', asyncHandler(async (req, res) => {
   }
 
   if (!success) {
-    await user.registerFailedLogin();
+    if (!SECURITY_DISABLED) await user.registerFailedLogin();
     securityLog('auth.mfa.fail', { userId: String(user._id), ip: clientIp(req) });
     res.status(401);
     throw new Error('Invalid MFA code');

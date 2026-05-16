@@ -58,6 +58,19 @@
   right: 15px;
 }
 
+.badge-promo {
+  background: linear-gradient(135deg, #ff6a3d, #ff3d77);
+  color: #fff;
+  top: 50px;
+  box-shadow: 0 2px 8px rgba(255, 61, 119, 0.35);
+  animation: promo-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes promo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
 .product-quick-actions {
   position: absolute;
   bottom: 0;

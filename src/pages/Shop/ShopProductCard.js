@@ -18,9 +18,21 @@ const ShopProductCard = ({ product, onQuickView }) => {
     onQuickView(product);
   };
 
+  // If the product needs a size/color choice, defer to QuickView so the user
+  // can pick a variant. Otherwise add directly.
+  const requiresVariant = (
+    (product.sizes && product.sizes.length > 0) ||
+    (product.shoeSize && product.shoeSize.length > 0) ||
+    (product.colors && product.colors.length > 0)
+  );
+
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (requiresVariant) {
+      onQuickView(product);
+      return;
+    }
     setIsAdding(true);
     setTimeout(() => {
       addToCart(product);
@@ -44,10 +56,17 @@ const ShopProductCard = ({ product, onQuickView }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <button
-        type="button"
+      <div
         className="product-link"
         onClick={handleQuickView}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleQuickView(e);
+          }
+        }}
+        role="button"
+        tabIndex={0}
         aria-label={`Quick view ${product.name}`}
       >
         <div className="product-image-wrapper">
@@ -68,6 +87,7 @@ const ShopProductCard = ({ product, onQuickView }) => {
           />
           {product.isNew && <span className="badge badge-new">NEW</span>}
           {product.salePrice && <span className="badge badge-sale">SALE</span>}
+          {product.isPromo && <span className="badge badge-promo">PROMO</span>}
           <div className="product-quick-actions">
             <button
               type="button"
@@ -110,7 +130,7 @@ const ShopProductCard = ({ product, onQuickView }) => {
             )}
           </div>
         </div>
-      </button>
+      </div>
     </article>
   );
 };

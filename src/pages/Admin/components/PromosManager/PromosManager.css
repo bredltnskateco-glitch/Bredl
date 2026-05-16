@@ -1,0 +1,111 @@
+.promos-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.promos-manager .manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.promos-manager .search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 10px 16px;
+  flex: 1;
+  max-width: 420px;
+  min-width: 0;
+}
+
+.promos-manager .search-box svg { color: #666; }
+.promos-manager .search-box input {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 0.9rem;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+}
+
+.promos-manager .add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.promos-manager .add-btn:hover {
+  background: #e0e0e0;
+}
+
+.promos-table .promo-code-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.promos-table .promo-code-cell strong {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+.promo-desc {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.promo-active-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #ccc;
+  cursor: pointer;
+}
+.promo-active-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #00c853;
+}
+
+.action-btn.promote {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+.action-btn.promote:hover {
+  background: #ffc107;
+  color: #000;
+}
+
+@media (max-width: 768px) {
+  .promos-manager .manager-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .promos-manager .search-box {
+    max-width: 100%;
+  }
+  .promos-manager .add-btn {
+    justify-content: center;
+    min-height: 44px;
+  }
+  .promos-table .promo-code-cell {
+    align-items: flex-end;
+    text-align: right;
+  }
+}

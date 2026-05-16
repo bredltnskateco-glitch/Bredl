@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { FiTrendingUp, FiDollarSign, FiShoppingCart, FiBox, FiUsers } from 'react-icons/fi';
 import { analyticsApi } from '../../../../api';
+import { formatCurrency, customerName } from '../../utils/format';
+import { getStatusClass } from '../../utils/status';
 import './DashboardOverview.css';
-
-const formatCurrency = (n) => `${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TND`;
 
 const DashboardOverview = () => {
   const [overview, setOverview] = useState(null);
@@ -32,22 +32,11 @@ const DashboardOverview = () => {
   }, []);
 
   const stats = overview ? [
-    { label: 'Total Revenue', value: formatCurrency(overview.totalRevenue), icon: FiDollarSign },
-    { label: 'Total Orders', value: overview.totalOrders.toLocaleString(), icon: FiShoppingCart },
-    { label: 'Total Products', value: overview.totalProducts.toLocaleString(), icon: FiBox },
-    { label: 'Total Customers', value: overview.totalCustomers.toLocaleString(), icon: FiUsers },
+    { label: 'Total Revenue', value: formatCurrency(overview.totalRevenue, { decimals: 2 }), icon: FiDollarSign },
+    { label: 'Total Orders', value: Number(overview.totalOrders || 0).toLocaleString(), icon: FiShoppingCart },
+    { label: 'Total Products', value: Number(overview.totalProducts || 0).toLocaleString(), icon: FiBox },
+    { label: 'Total Customers', value: Number(overview.totalCustomers || 0).toLocaleString(), icon: FiUsers },
   ] : [];
-
-  const getStatusClass = (status) => {
-    switch ((status || '').toLowerCase()) {
-      case 'completed': return 'status-completed';
-      case 'processing': return 'status-processing';
-      case 'shipped': return 'status-shipped';
-      case 'pending': return 'status-pending';
-      case 'cancelled': return 'status-cancelled';
-      default: return '';
-    }
-  };
 
   if (loading) return <p>Loading dashboard...</p>;
   if (error) return <p style={{ color: '#c00' }}>{error}</p>;
@@ -93,13 +82,9 @@ const DashboardOverview = () => {
                 {(overview.recentOrders || []).map((order) => (
                   <tr key={order._id}>
                     <td className="order-id">{order.orderNumber}</td>
-                    <td>
-                      {order.user
-                        ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim()
-                        : '—'}
-                    </td>
+                    <td>{order.user ? customerName(order) : '—'}</td>
                     <td>{(order.items || []).length}</td>
-                    <td className="order-amount">{formatCurrency(order.total)}</td>
+                    <td className="order-amount">{formatCurrency(order.total, { decimals: 2 })}</td>
                     <td>
                       <span className={`status-badge ${getStatusClass(order.status)}`}>
                         {order.status}
@@ -124,7 +109,7 @@ const DashboardOverview = () => {
                   <span className="product-name">{product.name}</span>
                   <span className="product-sales">{product.sold} sold</span>
                 </div>
-                <span className="product-revenue">{formatCurrency(product.revenue)}</span>
+                <span className="product-revenue">{formatCurrency(product.revenue, { decimals: 2 })}</span>
               </div>
             ))}
             {!topProducts.length && <p style={{ color: '#888' }}>No sales yet.</p>}
@@ -144,7 +129,7 @@ const DashboardOverview = () => {
                   <span className="product-name">{p.name}</span>
                   <span className="product-sales">{p.stock} in stock</span>
                 </div>
-                <span className="product-revenue">{formatCurrency(p.price)}</span>
+                <span className="product-revenue">{formatCurrency(p.price, { decimals: 2 })}</span>
               </div>
             ))}
           </div>

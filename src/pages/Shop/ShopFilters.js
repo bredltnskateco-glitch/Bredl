@@ -1,7 +1,10 @@
 import React from 'react';
 import { FiX, FiChevronDown } from 'react-icons/fi';
-import { categories, brands, sizes, priceRanges } from './shopData';
+import { PRICE_RANGES } from '../../constants/shopFilters';
+import { SPEC_OPTIONS, SPEC_LABELS } from '../../constants/subcategorySpecs';
 import './ShopFilters.css';
+
+const ALL_CATEGORIES_ENTRY = { id: 'all', name: 'All Products', subcategories: [] };
 
 const ShopFilters = ({
   filterOpen,
@@ -10,8 +13,23 @@ const ShopFilters = ({
   setActiveFilters,
   expandedCategories,
   toggleCategoryExpand,
-  handleCategoryClick
+  handleCategoryClick,
+  categories = [],
+  brands = [],
+  availableSpecs = [],
 }) => {
+  const fullCategories = [ALL_CATEGORIES_ENTRY, ...categories];
+
+  const setSpecFilter = (field, value) => {
+    setActiveFilters((prev) => {
+      const current = (prev.specFilters || {})[field];
+      const next = { ...(prev.specFilters || {}) };
+      if (current === value) delete next[field];
+      else next[field] = value;
+      return { ...prev, specFilters: next };
+    });
+  };
+
   return (
     <aside className={`shop-sidebar ${filterOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
@@ -21,13 +39,12 @@ const ShopFilters = ({
         </button>
       </div>
 
-      {/* Category Filter */}
       <div className="filter-group">
         <h4>Category</h4>
         <ul className="filter-list">
-          {categories.map((category) => (
+          {fullCategories.map((category) => (
             <li key={category.id}>
-              <div 
+              <div
                 className="filter-item-row"
                 onClick={() => {
                   if (category.subcategories && category.subcategories.length > 0) {
@@ -36,21 +53,25 @@ const ShopFilters = ({
                   handleCategoryClick(category.id);
                 }}
               >
-                <span className={`filter-text ${activeFilters.category === category.id ? 'active' : ''}`}>
+                <span
+                  className={`filter-text ${activeFilters.category === category.id ? 'active' : ''}`}
+                >
                   {category.name}
                 </span>
                 {category.subcategories && category.subcategories.length > 0 && (
-                  <FiChevronDown 
-                    size={12} 
+                  <FiChevronDown
+                    size={12}
                     className={`filter-arrow ${expandedCategories.includes(category.id) ? 'expanded' : ''}`}
                   />
                 )}
               </div>
-              {category.subcategories && category.subcategories.length > 0 && expandedCategories.includes(category.id) && (
+              {category.subcategories
+                && category.subcategories.length > 0
+                && expandedCategories.includes(category.id) && (
                 <ul className="subcategory-list">
                   {category.subcategories.map((sub) => (
                     <li key={sub.id}>
-                      <button 
+                      <button
                         className={`filter-text ${activeFilters.subcategory === sub.id ? 'active' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -68,48 +89,67 @@ const ShopFilters = ({
         </ul>
       </div>
 
-      {/* Brand Filter */}
+      {availableSpecs.length > 0 && (
+        <div className="filter-group">
+          <h4>Specifications</h4>
+          {availableSpecs.map((field) => {
+            const options = SPEC_OPTIONS[field];
+            if (!options || options.length === 0) return null;
+            const selected = (activeFilters.specFilters || {})[field];
+            return (
+              <div key={field} className="filter-subgroup">
+                <h5 className="filter-subtitle">{SPEC_LABELS[field] || field}</h5>
+                <ul className="filter-list">
+                  {options.map((opt) => (
+                    <li key={opt}>
+                      <button
+                        className={`filter-text ${selected === opt ? 'active' : ''}`}
+                        onClick={() => setSpecFilter(field, opt)}
+                      >
+                        {opt}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="filter-group">
         <h4>Brand</h4>
         <ul className="filter-list scrollable">
-          {brands.map((brand, index) => (
-            <li key={index}>
-              <button 
-                className={`filter-text ${activeFilters.brand === brand || (brand === 'All Brands' && activeFilters.brand === 'all') ? 'active' : ''}`}
-                onClick={() => setActiveFilters({...activeFilters, brand: brand === 'All Brands' ? 'all' : brand})}
-              >
-                {brand}
-              </button>
-            </li>
-          ))}
+          {brands.map((brand) => {
+            const isAll = brand === 'All Brands';
+            const isActive = isAll
+              ? activeFilters.brand === 'all'
+              : activeFilters.brand === brand;
+            return (
+              <li key={brand}>
+                <button
+                  className={`filter-text ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveFilters({
+                    ...activeFilters,
+                    brand: isAll ? 'all' : brand,
+                  })}
+                >
+                  {brand}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
-      {/* Size Filter */}
-      <div className="filter-group">
-        <h4>Size</h4>
-        <div className="size-grid">
-          {sizes.map((size, index) => (
-            <button 
-              key={index}
-              className={`size-btn ${activeFilters.size === size || (size === 'All Sizes' && activeFilters.size === 'all') ? 'active' : ''}`}
-              onClick={() => setActiveFilters({...activeFilters, size: size === 'All Sizes' ? 'all' : size})}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Price Filter */}
       <div className="filter-group">
         <h4>Price</h4>
         <ul className="filter-list">
-          {priceRanges.map((range) => (
+          {PRICE_RANGES.map((range) => (
             <li key={range.id}>
-              <button 
+              <button
                 className={`filter-text ${activeFilters.price === range.id ? 'active' : ''}`}
-                onClick={() => setActiveFilters({...activeFilters, price: range.id})}
+                onClick={() => setActiveFilters({ ...activeFilters, price: range.id })}
               >
                 {range.name}
               </button>
@@ -118,16 +158,15 @@ const ShopFilters = ({
         </ul>
       </div>
 
-      {/* Clear Filters */}
-      <button 
+      <button
         className="clear-filters"
         onClick={() => setActiveFilters({
           category: 'all',
           subcategory: 'all',
           brand: 'all',
-          size: 'all',
           price: 'all',
-          sort: 'newest'
+          sort: 'newest',
+          specFilters: {},
         })}
       >
         Clear All Filters

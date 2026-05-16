@@ -287,6 +287,52 @@
 }
 
 /* Additional Images */
+.add-image-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.add-image-row input {
+  flex: 1;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.add-image-row input:focus {
+  border-color: #444;
+}
+
+.add-image-btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-image-btn-inline:hover {
+  background: #e5e5e5;
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
 .additional-images {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -616,4 +662,88 @@
   .category-specs {
     padding: 16px;
   }
+}
+
+.flag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.flag-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.flag-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #fff;
+  cursor: pointer;
+}
+
+.promo-toggle-btn {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.promo-toggle-btn:hover {
+  border-color: #ff8a3d;
+  color: #ffb27a;
+}
+
+.promo-toggle-btn.active {
+  background: linear-gradient(135deg, #ff6a3d, #ff3d77);
+  border: 1px solid transparent;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255, 61, 119, 0.35);
+}
+
+.promo-toggle-btn svg {
+  font-size: 14px;
+}
+
+.variants-optional-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: 0 0 18px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.variants-optional-note svg {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.optional-tag {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: none;
+  letter-spacing: 0;
 }

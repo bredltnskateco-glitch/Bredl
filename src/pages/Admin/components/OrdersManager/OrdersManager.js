@@ -1,9 +1,25 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { FiSearch, FiFilter, FiEye, FiCheck, FiTruck, FiX } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiEye, FiCheck, FiTruck, FiX, FiRefreshCw, FiShoppingBag } from 'react-icons/fi';
 import { ordersApi } from '../../../../api';
+import { formatCurrency, formatDate, customerName } from '../../utils/format';
+import { getStatusClass, ORDER_STATUSES } from '../../utils/status';
+import { toast } from '../Toast/Toast';
+import EmptyState from '../EmptyState/EmptyState';
 import './OrdersManager.css';
 
-const statusOptions = ['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled'];
+const statusOptions = ORDER_STATUSES;
+
+const PAYMENT_METHOD_LABELS = {
+  cod: 'Cash on Delivery',
+  flouci: 'Flouci',
+  d17: 'D17',
+  visa: 'Visa',
+  mastercard: 'MasterCard',
+  stripe: 'Stripe',
+  paypal: 'PayPal',
+  transfer: 'Bank Transfer',
+  card: 'Card (legacy)',
+};
 
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
@@ -28,38 +44,31 @@ const OrdersManager = () => {
 
   useEffect(() => { load(); }, [load]);
 
+  const [savingStatusId, setSavingStatusId] = useState(null);
+
   const updateOrderStatus = async (orderId, newStatus) => {
+    setSavingStatusId(orderId);
     try {
       const updated = await ordersApi.updateStatus(orderId, newStatus);
       setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, ...updated } : o)));
       if (selectedOrder && selectedOrder._id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
       }
+      toast.success(`Order moved to ${newStatus}`);
     } catch (err) {
-      alert(err.message || 'Update failed');
+      toast.error(err.message || 'Update failed');
+    } finally {
+      setSavingStatusId(null);
     }
   };
 
   const filteredOrders = orders.filter((order) => {
-    const customerName = order.user
-      ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim()
-      : '';
-    const haystack = `${order.orderNumber || ''} ${customerName} ${order.user?.email || ''}`.toLowerCase();
+    const name = customerName(order);
+    const haystack = `${order.orderNumber || ''} ${name} ${order.user?.email || ''}`.toLowerCase();
     const matchesSearch = haystack.includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
-
-  const getStatusClass = (status) => {
-    switch ((status || '').toLowerCase()) {
-      case 'completed': return 'status-completed';
-      case 'processing': return 'status-processing';
-      case 'shipped': return 'status-shipped';
-      case 'pending': return 'status-pending';
-      case 'cancelled': return 'status-cancelled';
-      default: return '';
-    }
-  };
 
   const getStatusIcon = (status) => {
     switch ((status || '').toLowerCase()) {
@@ -69,9 +78,6 @@ const OrdersManager = () => {
       default: return null;
     }
   };
-
-  const customerName = (o) =>
-    o.user ? `${o.user.firstName || ''} ${o.user.lastName || ''}`.trim() : '';
 
   return (
     <div className="orders-manager">
@@ -109,14 +115,36 @@ const OrdersManager = () => {
             <span className="stat-count">{orders.filter((o) => o.status === 'Shipped').length}</span>
             Shipped
           </span>
+          <button
+            type="button"
+            className="admin-btn admin-btn-secondary"
+            onClick={load}
+            disabled={loading}
+            aria-label="Refresh orders"
+          >
+            <FiRefreshCw className={loading ? 'spin' : ''} />
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 
       {loading && <p>Loading orders...</p>}
       {error && <p style={{ color: '#c00' }}>{error}</p>}
 
-      {!loading && !error && (
-        <div className="orders-table-container">
+      {!loading && !error && filteredOrders.length === 0 && (
+        <EmptyState
+          icon={FiShoppingBag}
+          title={orders.length === 0 ? 'No orders yet' : 'No orders match your filters'}
+          hint={
+            orders.length === 0
+              ? 'New orders placed in the storefront will appear here in real time.'
+              : 'Try clearing the search or changing the status filter.'
+          }
+        />
+      )}
+
+      {!loading && !error && filteredOrders.length > 0 && (
+        <div className="admin-data-table orders-table-container">
           <table className="orders-table">
             <thead>
               <tr>
@@ -132,35 +160,39 @@ const OrdersManager = () => {
             <tbody>
               {filteredOrders.map((order) => {
                 const productNames = (order.items || []).map((i) => i.name);
+                const isSaving = savingStatusId === order._id;
                 return (
                   <tr key={order._id}>
-                    <td className="order-id">{order.orderNumber}</td>
-                    <td>
+                    <td className="order-id" data-label="Order ID">{order.orderNumber}</td>
+                    <td data-label="Customer">
                       <div className="customer-cell">
                         <span className="customer-name">{customerName(order) || '—'}</span>
                         <span className="customer-email">{order.user?.email}</span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Products">
                       <div className="products-cell">
                         {productNames.slice(0, 2).join(', ')}
                         {productNames.length > 2 && ` +${productNames.length - 2} more`}
                       </div>
                     </td>
-                    <td className="amount-cell">{Number(order.total || 0).toFixed(2)} TND</td>
-                    <td className="date-cell">{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td>
+                    <td className="amount-cell" data-label="Amount">{formatCurrency(order.total, { decimals: 2 })}</td>
+                    <td className="date-cell" data-label="Date">{formatDate(order.createdAt)}</td>
+                    <td data-label="Status">
                       <select
                         className={`status-select ${getStatusClass(order.status)}`}
                         value={order.status}
                         onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                        disabled={isSaving}
+                        aria-busy={isSaving}
                       >
                         {statusOptions.map((status) => (
                           <option key={status} value={status}>{status}</option>
                         ))}
                       </select>
+                      {isSaving && <span className="status-saving">Saving…</span>}
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <button className="view-btn" onClick={() => setSelectedOrder(order)}>
                         <FiEye />
                         View
@@ -207,8 +239,8 @@ const OrdersManager = () => {
                 </div>
                 <div className="detail-section">
                   <h4>Order Information</h4>
-                  <p><strong>Date:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                  <p><strong>Payment:</strong> {selectedOrder.paymentMethod}</p>
+                  <p><strong>Date:</strong> {formatDate(selectedOrder.createdAt, { withTime: true })}</p>
+                  <p><strong>Payment:</strong> {PAYMENT_METHOD_LABELS[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}</p>
                   {selectedOrder.promoCode && (
                     <p><strong>Promo:</strong> {selectedOrder.promoCode}</p>
                   )}
@@ -225,7 +257,7 @@ const OrdersManager = () => {
                 <ul className="products-list">
                   {(selectedOrder.items || []).map((item, idx) => (
                     <li key={idx}>
-                      {item.name} × {item.quantity} — {Number(item.price).toFixed(2)} TND
+                      {item.name} × {item.quantity} — {formatCurrency(item.price, { decimals: 2 })}
                     </li>
                   ))}
                 </ul>
@@ -234,21 +266,21 @@ const OrdersManager = () => {
               <div className="order-totals-block">
                 <div className="order-totals-row">
                   <span>Subtotal</span>
-                  <span>{Number(selectedOrder.itemsTotal || 0).toFixed(2)} TND</span>
+                  <span>{formatCurrency(selectedOrder.itemsTotal, { decimals: 2 })}</span>
                 </div>
                 {Number(selectedOrder.discount) > 0 && (
                   <div className="order-totals-row discount">
                     <span>Discount{selectedOrder.promoCode ? ` (${selectedOrder.promoCode})` : ''}</span>
-                    <span>−{Number(selectedOrder.discount).toFixed(2)} TND</span>
+                    <span>−{formatCurrency(selectedOrder.discount, { decimals: 2 })}</span>
                   </div>
                 )}
                 <div className="order-totals-row">
                   <span>Shipping</span>
-                  <span>{Number(selectedOrder.shippingCost || 0).toFixed(2)} TND</span>
+                  <span>{formatCurrency(selectedOrder.shippingCost, { decimals: 2 })}</span>
                 </div>
                 <div className="order-total">
                   <span>Total Amount</span>
-                  <span className="total-amount">{Number(selectedOrder.total || 0).toFixed(2)} TND</span>
+                  <span className="total-amount">{formatCurrency(selectedOrder.total, { decimals: 2 })}</span>
                 </div>
               </div>
             </div>

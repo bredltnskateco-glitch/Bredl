@@ -25,6 +25,23 @@
   border-bottom: none;
 }
 
+.filter-subgroup {
+  margin-top: 12px;
+}
+
+.filter-subgroup:first-of-type {
+  margin-top: 0;
+}
+
+.filter-subtitle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 14px 0 6px;
+}
+
 .filter-group h4 {
   font-size: 0.8rem;
   font-weight: 600;

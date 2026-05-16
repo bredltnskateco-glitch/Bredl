@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   FiHome, FiShoppingBag, FiUsers, FiBox, FiTag,
   FiBarChart2, FiSettings, FiMenu, FiEye,
-  FiStar, FiFileText, FiShield, FiAlertTriangle
+  FiStar, FiFileText, FiShield, FiAlertTriangle,
+  FiPercent, FiLayers, FiAward,
 } from 'react-icons/fi';
 
 // Import components
@@ -14,22 +15,66 @@ import ProductsManager from './components/ProductsManager/ProductsManager';
 import OrdersManager from './components/OrdersManager/OrdersManager';
 import CustomersManager from './components/CustomersManager/CustomersManager';
 import CategoriesManager from './components/CategoriesManager/CategoriesManager';
+import CollectionsManager from './components/CollectionsManager/CollectionsManager';
+import BrandsManager from './components/BrandsManager/BrandsManager';
 import AnalyticsDashboard from './components/AnalyticsDashboard/AnalyticsDashboard';
 import SettingsPanel from './components/SettingsPanel/SettingsPanel';
 import NewArrivalsManager from './components/NewArrivalsManager/NewArrivalsManager';
 import NewsManager from './components/NewsManager/NewsManager';
+import PromosManager from './components/PromosManager/PromosManager';
 import MfaPanel from './components/MfaPanel/MfaPanel';
+import { ToastContainer } from './components/Toast/Toast';
 
+import './styles/admin-shared.css';
 import './AdminDashboard.css';
 
+const menuItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: FiHome },
+  { id: 'analytics', label: 'Analytics', icon: FiBarChart2 },
+  { id: 'orders', label: 'Orders', icon: FiShoppingBag },
+  { id: 'products', label: 'Products', icon: FiBox },
+  { id: 'categories', label: 'Categories', icon: FiTag },
+  { id: 'collections', label: 'Collections', icon: FiLayers },
+  { id: 'brands', label: 'Brands', icon: FiAward },
+  { id: 'newarrivals', label: 'New Arrivals', icon: FiStar },
+  { id: 'news', label: 'News', icon: FiFileText },
+  { id: 'customers', label: 'Customers', icon: FiUsers },
+  { id: 'promos', label: 'Promos', icon: FiPercent },
+  { id: 'security', label: 'Security (MFA)', icon: FiShield },
+  { id: 'settings', label: 'Settings', icon: FiSettings },
+];
+
+const menuItemIds = new Set(menuItems.map((item) => item.id));
+
+const getTabFromPath = (pathname) => {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] !== 'admin') return 'dashboard';
+  return parts[1] || 'dashboard';
+};
+
+const getTabPath = (id) => (id === 'dashboard' ? '/admin' : `/admin/${id}`);
+
 const AdminDashboard = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.innerWidth > 768;
   });
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    const pathTab = getTabFromPath(location.pathname);
+    return menuItemIds.has(pathTab) ? pathTab : 'dashboard';
+  });
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    const pathTab = getTabFromPath(location.pathname);
+    if (!menuItemIds.has(pathTab)) {
+      navigate('/admin', { replace: true });
+      return;
+    }
+    setActiveTab((current) => (current === pathTab ? current : pathTab));
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     const onResize = () => {
@@ -57,6 +102,7 @@ const AdminDashboard = () => {
 
   const handleTabChange = (id) => {
     setActiveTab(id);
+    navigate(getTabPath(id));
     if (typeof window !== 'undefined' && window.innerWidth <= 768) {
       setSidebarOpen(false);
     }
@@ -69,25 +115,16 @@ const AdminDashboard = () => {
 
   const mfaRequired = user?.role === 'admin' && !user?.mfaEnabled;
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: FiHome },
-    { id: 'orders', label: 'Orders', icon: FiShoppingBag },
-    { id: 'products', label: 'Products', icon: FiBox },
-    { id: 'newarrivals', label: 'New Arrivals', icon: FiStar },
-    { id: 'news', label: 'News', icon: FiFileText },
-    { id: 'customers', label: 'Customers', icon: FiUsers },
-    { id: 'categories', label: 'Categories', icon: FiTag },
-    { id: 'analytics', label: 'Analytics', icon: FiBarChart2 },
-    { id: 'security', label: 'Security (MFA)', icon: FiShield },
-    { id: 'settings', label: 'Settings', icon: FiSettings }
-  ];
-
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardOverview />;
       case 'products':
         return <ProductsManager />;
+      case 'collections':
+        return <CollectionsManager />;
+      case 'brands':
+        return <BrandsManager />;
       case 'newarrivals':
         return <NewArrivalsManager />;
       case 'news':
@@ -100,6 +137,8 @@ const AdminDashboard = () => {
         return <CategoriesManager />;
       case 'analytics':
         return <AnalyticsDashboard />;
+      case 'promos':
+        return <PromosManager />;
       case 'security':
         return <MfaPanel />;
       case 'settings':
@@ -173,7 +212,7 @@ const AdminDashboard = () => {
               are blocked until you enable it.
             </span>
             <button
-              onClick={() => setActiveTab('security')}
+              onClick={() => handleTabChange('security')}
               style={{
                 marginLeft: 'auto',
                 background: '#9a3412',
@@ -194,6 +233,7 @@ const AdminDashboard = () => {
           {renderContent()}
         </div>
       </main>
+      <ToastContainer />
     </div>
   );
 };

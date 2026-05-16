@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiX, FiHeart, FiTrash2, FiShoppingBag } from 'react-icons/fi';
 import { useWishlist } from '../../context/WishlistContext';
@@ -16,6 +16,15 @@ const Wishlist = () => {
   } = useWishlist();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isWishlistOpen) return undefined;
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') closeWishlist();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isWishlistOpen, closeWishlist]);
 
   const handleMoveToCart = (product) => {
     addToCart(product);

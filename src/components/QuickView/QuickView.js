@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiX, FiHeart, FiChevronLeft, FiChevronRight, FiCheck, FiShoppingCart, FiTruck, FiRefreshCw, FiShield } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { SPEC_LABELS } from '../../constants/subcategorySpecs';
 import './QuickView.css';
 
 const QuickView = ({ product, isOpen, onClose }) => {
@@ -81,21 +82,10 @@ const QuickView = ({ product, isOpen, onClose }) => {
     setSelectedImage((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const getProductSpecs = () => {
-    const specs = [];
-    if (product.deckWidth) specs.push({ label: 'Width', value: product.deckWidth });
-    if (product.deckLength) specs.push({ label: 'Length', value: product.deckLength });
-    if (product.wheelbase) specs.push({ label: 'Wheelbase', value: product.wheelbase });
-    if (product.concave) specs.push({ label: 'Concave', value: product.concave });
-    if (product.material) specs.push({ label: 'Material', value: product.material });
-    if (product.wheelSize) specs.push({ label: 'Wheel Size', value: product.wheelSize });
-    if (product.durometer) specs.push({ label: 'Durometer', value: product.durometer });
-    if (product.boardLength) specs.push({ label: 'Length', value: product.boardLength });
-    if (product.boardVolume) specs.push({ label: 'Volume', value: product.boardVolume });
-    if (product.finSetup) specs.push({ label: 'Fin Setup', value: product.finSetup });
-    if (product.flex) specs.push({ label: 'Flex', value: product.flex });
-    return specs;
-  };
+  const getProductSpecs = () =>
+    Object.entries(SPEC_LABELS)
+      .filter(([field]) => product[field])
+      .map(([field, label]) => ({ label, value: product[field] }));
 
   const specs = getProductSpecs();
   const hasDiscount = product.salePrice && product.price;
@@ -308,14 +298,16 @@ const QuickView = ({ product, isOpen, onClose }) => {
               className="view-full-details"
               onClick={() => {
                 onClose();
-                if (product.category) {
+                if (product.category && product.subcategory) {
+                  navigate(`/shop/${product.category}?subcategory=${product.subcategory}`);
+                } else if (product.category) {
                   navigate(`/shop/${product.category}`);
                 } else {
                   navigate('/shop');
                 }
               }}
             >
-              View Full Details
+              Browse more like this
             </button>
           </div>
         </div>

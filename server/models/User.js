@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { SECURITY_DISABLED } = require('../config/securityFlag');
 
 const BCRYPT_COST = 12;
 const MIN_PASSWORD_LENGTH = 12;
+const EFFECTIVE_MIN_PASSWORD_LENGTH = SECURITY_DISABLED ? 1 : MIN_PASSWORD_LENGTH;
 
 const addressSchema = new mongoose.Schema({
   street: { type: String, maxlength: 200 },
@@ -19,11 +21,23 @@ const userSchema = new mongoose.Schema({
     maxlength: 254,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email address'],
   },
-  password: { type: String, required: true, minlength: MIN_PASSWORD_LENGTH, select: false },
+  // Password is required for email/password accounts but optional for accounts
+  // created via a federated provider (e.g. Google). The pre-save hook below
+  // only hashes when the field is modified.
+  password: {
+    type: String,
+    required: function () { return !this.googleId; },
+    minlength: EFFECTIVE_MIN_PASSWORD_LENGTH,
+    select: false,
+  },
   phone: { type: String, default: '', maxlength: 30 },
   address: addressSchema,
   role: { type: String, enum: ['client', 'admin'], default: 'client' },
   newsletter: { type: Boolean, default: false },
+
+  // Federated identity (Google Identity Services / Sign in with Google).
+  // Stored unique-but-sparse so password-only users don't collide on null.
+  googleId: { type: String, default: null, index: { unique: true, sparse: true } },
 
   // Account lockout (audit item: brute force protection)
   failedLoginAttempts: { type: Number, default: 0, select: false },

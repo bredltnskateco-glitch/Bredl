@@ -1,232 +1,271 @@
-import React, { useState, useEffect } from 'react';
-import { FiX, FiImage, FiUpload, FiPlus, FiTrash2, FiInfo } from 'react-icons/fi';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FiX, FiUpload, FiPlus, FiTrash2, FiInfo, FiTag } from 'react-icons/fi';
+import { categoriesApi } from '../../../../api';
+import {
+  SPEC_FIELDS_BY_SUBCAT,
+  SPEC_OPTIONS,
+  SPEC_LABELS,
+} from '../../../../constants/subcategorySpecs';
 import './AddProductModal.css';
 
-const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'Streetwear',
-    price: '',
-    salePrice: '',
-    stock: '',
-    description: '',
-    image: '',
-    images: [],
-    sizes: [],
-    colors: [],
-    brand: '',
-    sku: '',
-    tags: [],
-    // Skateboard specific fields
-    deckWidth: '',
-    deckLength: '',
-    wheelbase: '',
-    concave: '',
-    material: '',
-    // Shoe specific fields
-    shoeSize: [],
-    // Surf specific fields
-    boardLength: '',
-    boardVolume: '',
-    finSetup: ''
-  });
+const APPAREL_CATEGORIES = new Set(['streetwear', 'snowboard', 'accessories']);
+const SHOE_CATEGORIES = new Set(['shoes']);
 
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47'];
+
+const BRANDS = [
+  'Bredl', 'Nike SB', 'Adidas', 'Vans', 'Carhartt WIP', 'Palace', 'Supreme',
+  'Thrasher', 'Santa Cruz', 'Independent', 'Spitfire', 'Bones', 'Burton',
+  'The North Face', 'Patagonia', 'Element', 'Baker', 'Girl', 'Real', 'Polar Skate',
+  'Zero', 'Hockey', 'Creature', 'Toy Machine', 'Channel Islands', 'Other',
+];
+
+const emptyForm = () => ({
+  name: '',
+  category: '',
+  subcategory: '',
+  price: '',
+  salePrice: '',
+  stock: '',
+  description: '',
+  image: '',
+  images: [],
+  sizes: [],
+  shoeSize: [],
+  colors: [],
+  brand: 'Bredl',
+  sku: '',
+  tags: [],
+  isFeatured: false,
+  isNew: false,
+  isPromo: false,
+  // Spec fields are merged in dynamically based on selected subcategory.
+  deckWidth: '',
+  concave: '',
+  material: '',
+  truckSize: '',
+  axleWidth: '',
+  wheelSize: '',
+  durometer: '',
+  wheelShape: '',
+  boardLength: '',
+  boardVolume: '',
+  finSetup: '',
+  flex: '',
+});
+
+const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => {
+  const [formData, setFormData] = useState(emptyForm());
+  const [categories, setCategories] = useState([]);
   const [newColor, setNewColor] = useState('');
   const [newTag, setNewTag] = useState('');
+  const [imageUrlInput, setImageUrlInput] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
   const [errors, setErrors] = useState({});
 
-  const categories = ['Streetwear', 'Shoes', 'Accessories', 'Skate', 'Surf', 'Snowboard'];
-  
-  // Clothing sizes
-  const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  
-  // Shoe sizes (EU sizing)
-  const shoeSizes = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47'];
-  
-  // Skateboard deck widths
-  const deckWidths = ['7.5"', '7.75"', '8.0"', '8.125"', '8.25"', '8.375"', '8.5"', '8.625"', '8.75"', '9.0"', '9.5"', '10.0"'];
-  
-  // Skateboard concave types
-  const concaveTypes = ['Low', 'Medium', 'High', 'Mellow', 'Steep'];
-  
-  // Skateboard materials
-  const deckMaterials = ['7-Ply Maple', 'Canadian Maple', 'Bamboo', 'Carbon Fiber Reinforced', 'Epoxy Resin', 'Fibreglass Reinforced'];
-  
-  // Surf fin setups
-  const finSetups = ['Thruster (3 fins)', 'Quad (4 fins)', 'Twin Fin', 'Single Fin', '5 Fin (Convertible)'];
-  
-  const brands = ['Nike SB', 'Adidas', 'Vans', 'Carhartt WIP', 'Palace', 'Supreme', 'Thrasher', 'Santa Cruz', 'Independent', 'Spitfire', 'Burton', 'The North Face', 'Patagonia', 'Element', 'Baker', 'Girl', 'Real', 'Polar Skate', 'Zero', 'Hockey Skateboards', 'Creature', 'Toy Machine', 'Channel Islands', 'Other'];
+  // Load categories once when the modal first opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await categoriesApi.list();
+        if (!cancelled) setCategories(data || []);
+      } catch {
+        if (!cancelled) setCategories([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
     if (editingProduct) {
       setFormData({
-        name: editingProduct.name || '',
-        category: editingProduct.category || 'Streetwear',
+        ...emptyForm(),
+        ...editingProduct,
         price: editingProduct.price?.toString() || '',
         salePrice: editingProduct.salePrice?.toString() || '',
         stock: editingProduct.stock?.toString() || '',
-        description: editingProduct.description || '',
-        image: editingProduct.image || '',
-        images: editingProduct.images || [],
         sizes: editingProduct.sizes || [],
-        colors: editingProduct.colors || [],
-        brand: editingProduct.brand || '',
-        sku: editingProduct.sku || '',
-        tags: editingProduct.tags || [],
-        deckWidth: editingProduct.deckWidth || '',
-        deckLength: editingProduct.deckLength || '',
-        wheelbase: editingProduct.wheelbase || '',
-        concave: editingProduct.concave || '',
-        material: editingProduct.material || '',
         shoeSize: editingProduct.shoeSize || [],
-        boardLength: editingProduct.boardLength || '',
-        boardVolume: editingProduct.boardVolume || '',
-        finSetup: editingProduct.finSetup || ''
+        colors: editingProduct.colors || [],
+        tags: editingProduct.tags || [],
+        images: editingProduct.images || [],
+        isFeatured: !!editingProduct.isFeatured,
+        isNew: !!editingProduct.isNew,
+        isPromo: !!editingProduct.isPromo,
       });
     } else {
-      resetForm();
+      setFormData(emptyForm());
     }
-  }, [editingProduct, isOpen]);
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      category: 'Streetwear',
-      price: '',
-      salePrice: '',
-      stock: '',
-      description: '',
-      image: '',
-      images: [],
-      sizes: [],
-      colors: [],
-      brand: '',
-      sku: '',
-      tags: [],
-      deckWidth: '',
-      deckLength: '',
-      wheelbase: '',
-      concave: '',
-      material: '',
-      shoeSize: [],
-      boardLength: '',
-      boardVolume: '',
-      finSetup: ''
-    });
     setErrors({});
     setActiveTab('basic');
-  };
+    setImageUrlInput('');
+  }, [editingProduct, isOpen]);
+
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.slug === formData.category) || null,
+    [categories, formData.category],
+  );
+
+  const availableSubcategories = selectedCategory?.subcategories || [];
+
+  const specFields = useMemo(
+    () => SPEC_FIELDS_BY_SUBCAT[formData.subcategory] || [],
+    [formData.subcategory],
+  );
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user types
+    const { name, value, type, checked } = e.target;
+    const nextValue = type === 'checkbox' ? checked : value;
+    setFormData((prev) => {
+      const next = { ...prev, [name]: nextValue };
+      // If the category changes, reset subcategory + spec fields so we don't
+      // carry stale values from another category.
+      if (name === 'category' && value !== prev.category) {
+        next.subcategory = '';
+      }
+      return next;
+    });
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleSizeToggle = (size) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       sizes: prev.sizes.includes(size)
-        ? prev.sizes.filter(s => s !== size)
-        : [...prev.sizes, size]
+        ? prev.sizes.filter((s) => s !== size)
+        : [...prev.sizes, size],
+    }));
+  };
+
+  const handleShoeSizeToggle = (size) => {
+    setFormData((prev) => ({
+      ...prev,
+      shoeSize: prev.shoeSize.includes(size)
+        ? prev.shoeSize.filter((s) => s !== size)
+        : [...prev.shoeSize, size],
     }));
   };
 
   const handleAddColor = () => {
     if (newColor && !formData.colors.includes(newColor)) {
-      setFormData(prev => ({
-        ...prev,
-        colors: [...prev.colors, newColor]
-      }));
+      setFormData((prev) => ({ ...prev, colors: [...prev.colors, newColor] }));
       setNewColor('');
     }
   };
 
   const handleRemoveColor = (color) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      colors: prev.colors.filter(c => c !== color)
+      colors: prev.colors.filter((c) => c !== color),
     }));
   };
 
   const handleAddTag = () => {
     if (newTag && !formData.tags.includes(newTag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag]
-      }));
+      setFormData((prev) => ({ ...prev, tags: [...prev.tags, newTag] }));
       setNewTag('');
     }
   };
 
   const handleRemoveTag = (tag) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tag)
-    }));
+    setFormData((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }));
   };
 
+  // Add one or more image URLs. Supports newline- or comma-separated paste
+  // so admins can drop a list from their cloud-storage browser at once.
   const handleAddImage = () => {
-    const url = prompt('Enter image URL:');
-    if (url) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, url]
-      }));
+    const raw = imageUrlInput;
+    if (!raw || !raw.trim()) return;
+    const parts = raw.split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return;
+    setFormData((prev) => {
+      const next = [...prev.images];
+      parts.forEach((u) => { if (!next.includes(u)) next.push(u); });
+      return { ...prev, images: next };
+    });
+    setImageUrlInput('');
+  };
+
+  const handleImageInputKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddImage();
     }
   };
 
   const handleRemoveImage = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Product name is required';
-    }
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required';
-    }
-    if (!formData.stock || parseInt(formData.stock) < 0) {
-      newErrors.stock = 'Valid stock quantity is required';
-    }
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
-
+    if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required';
+    if (!formData.stock || parseInt(formData.stock, 10) < 0) newErrors.stock = 'Valid stock quantity is required';
+    if (!formData.category) newErrors.category = 'Category is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       setActiveTab('basic');
       return;
     }
-
     const productData = {
       ...formData,
       price: parseFloat(formData.price),
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
-      stock: parseInt(formData.stock),
-      status: parseInt(formData.stock) > 20 ? 'Active' : parseInt(formData.stock) > 0 ? 'Low Stock' : 'Out of Stock',
-      image: formData.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'
+      stock: parseInt(formData.stock, 10),
+      image: formData.image
+        || formData.images[0]
+        || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100',
     };
-
-    onSave(productData, editingProduct?.id);
-    resetForm();
+    onSave(productData, editingProduct?._id || editingProduct?.id);
+    setFormData(emptyForm());
     onClose();
+  };
+
+  const renderSpecInput = (field) => {
+    const options = SPEC_OPTIONS[field];
+    const label = SPEC_LABELS[field] || field;
+    if (options && options.length > 0) {
+      return (
+        <div className="form-group" key={field}>
+          <label>{label}</label>
+          <select name={field} value={formData[field] || ''} onChange={handleInputChange}>
+            <option value="">Select {label}</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+    return (
+      <div className="form-group" key={field}>
+        <label>{label}</label>
+        <input
+          type="text"
+          name={field}
+          value={formData[field] || ''}
+          onChange={handleInputChange}
+          placeholder={`Enter ${label.toLowerCase()}`}
+        />
+      </div>
+    );
   };
 
   if (!isOpen) return null;
@@ -242,25 +281,25 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
         </div>
 
         <div className="modal-tabs">
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'basic' ? 'active' : ''}`}
             onClick={() => setActiveTab('basic')}
           >
             Basic Info
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'details' ? 'active' : ''}`}
             onClick={() => setActiveTab('details')}
           >
             Details
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'media' ? 'active' : ''}`}
             onClick={() => setActiveTab('media')}
           >
             Media
           </button>
-          <button 
+          <button
             className={`tab-btn ${activeTab === 'variants' ? 'active' : ''}`}
             onClick={() => setActiveTab('variants')}
           >
@@ -270,7 +309,6 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {/* Basic Info Tab */}
             {activeTab === 'basic' && (
               <div className="tab-content">
                 <div className="form-group">
@@ -289,24 +327,40 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                 <div className="form-row">
                   <div className="form-group">
                     <label>Category *</label>
-                    <select 
-                      name="category" 
-                      value={formData.category} 
+                    <select
+                      name="category"
+                      value={formData.category}
                       onChange={handleInputChange}
                       className={errors.category ? 'error' : ''}
                     >
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                      <option value="">Select Category</option>
+                      {categories.map((c) => (
+                        <option key={c.slug} value={c.slug}>{c.name}</option>
                       ))}
                     </select>
                     {errors.category && <span className="error-message">{errors.category}</span>}
                   </div>
 
+                  {availableSubcategories.length > 0 && (
+                    <div className="form-group">
+                      <label>Sub-Category</label>
+                      <select
+                        name="subcategory"
+                        value={formData.subcategory || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select Sub-Category</option>
+                        {availableSubcategories.map((s) => (
+                          <option key={s.slug} value={s.slug}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div className="form-group">
                     <label>Brand</label>
                     <select name="brand" value={formData.brand} onChange={handleInputChange}>
-                      <option value="">Select Brand</option>
-                      {brands.map(brand => (
+                      {BRANDS.map((brand) => (
                         <option key={brand} value={brand}>{brand}</option>
                       ))}
                     </select>
@@ -367,10 +421,42 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                     placeholder="Product SKU (e.g., SKU-12345)"
                   />
                 </div>
+
+                <div className="form-group">
+                  <label>Visibility</label>
+                  <div className="flag-row">
+                    <label className="flag-checkbox">
+                      <input
+                        type="checkbox"
+                        name="isFeatured"
+                        checked={!!formData.isFeatured}
+                        onChange={handleInputChange}
+                      />
+                      <span>Featured on home page</span>
+                    </label>
+                    <label className="flag-checkbox">
+                      <input
+                        type="checkbox"
+                        name="isNew"
+                        checked={!!formData.isNew}
+                        onChange={handleInputChange}
+                      />
+                      <span>Mark as New</span>
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    className={`promo-toggle-btn ${formData.isPromo ? 'active' : ''}`}
+                    onClick={() => setFormData((prev) => ({ ...prev, isPromo: !prev.isPromo }))}
+                    aria-pressed={!!formData.isPromo}
+                  >
+                    <FiTag />
+                    <span>{formData.isPromo ? 'In Promo — highlighted in shop' : 'Highlight as Promo in shop'}</span>
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* Details Tab */}
             {activeTab === 'details' && (
               <div className="tab-content">
                 <div className="form-group">
@@ -388,7 +474,7 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                   <label>Tags</label>
                   <div className="tags-input">
                     <div className="tags-list">
-                      {formData.tags.map(tag => (
+                      {formData.tags.map((tag) => (
                         <span key={tag} className="tag">
                           {tag}
                           <button type="button" onClick={() => handleRemoveTag(tag)}>
@@ -403,7 +489,7 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         placeholder="Add a tag"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                       />
                       <button type="button" onClick={handleAddTag}>
                         <FiPlus />
@@ -414,7 +500,6 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
               </div>
             )}
 
-            {/* Media Tab */}
             {activeTab === 'media' && (
               <div className="tab-content">
                 <div className="form-group">
@@ -436,12 +521,29 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
 
                 <div className="form-group">
                   <label>Additional Images</label>
+                  <small className="form-hint">
+                    Paste one or more cloud-storage image URLs. Separate multiple with commas or new lines.
+                  </small>
+                  <div className="add-image-row">
+                    <input
+                      type="text"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      onKeyDown={handleImageInputKeyDown}
+                      placeholder="https://cdn.example.com/photo.jpg"
+                    />
+                    <button type="button" className="add-image-btn-inline" onClick={handleAddImage}>
+                      <FiUpload />
+                      <span>Add</span>
+                    </button>
+                  </div>
+
                   <div className="additional-images">
                     {formData.images.map((img, index) => (
                       <div key={index} className="additional-image">
                         <img src={img} alt={`Product ${index + 1}`} />
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="remove-image-btn"
                           onClick={() => handleRemoveImage(index)}
                         >
@@ -449,28 +551,22 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                         </button>
                       </div>
                     ))}
-                    <button 
-                      type="button" 
-                      className="add-image-btn"
-                      onClick={handleAddImage}
-                    >
-                      <FiUpload />
-                      <span>Add Image</span>
-                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Variants Tab */}
             {activeTab === 'variants' && (
               <div className="tab-content">
-                {/* Clothing Sizes - for Streetwear, Snowboard apparel */}
-                {(formData.category === 'Streetwear' || formData.category === 'Snowboard') && (
+                <p className="variants-optional-note">
+                  <FiInfo /> All fields on this tab are optional — fill in only what applies to this product.
+                </p>
+
+                {APPAREL_CATEGORIES.has(formData.category) && (
                   <div className="form-group">
-                    <label>Available Clothing Sizes</label>
+                    <label>Available Clothing Sizes <span className="optional-tag">(optional)</span></label>
                     <div className="sizes-grid">
-                      {clothingSizes.map(size => (
+                      {CLOTHING_SIZES.map((size) => (
                         <button
                           key={size}
                           type="button"
@@ -484,22 +580,16 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                   </div>
                 )}
 
-                {/* Shoe Sizes - for Shoes category */}
-                {formData.category === 'Shoes' && (
+                {SHOE_CATEGORIES.has(formData.category) && (
                   <div className="form-group">
-                    <label>Available Shoe Sizes (EU)</label>
+                    <label>Available Shoe Sizes (EU) <span className="optional-tag">(optional)</span></label>
                     <div className="sizes-grid shoe-sizes">
-                      {shoeSizes.map(size => (
+                      {SHOE_SIZES.map((size) => (
                         <button
                           key={size}
                           type="button"
                           className={`size-btn ${formData.shoeSize.includes(size) ? 'selected' : ''}`}
-                          onClick={() => {
-                            const newSizes = formData.shoeSize.includes(size)
-                              ? formData.shoeSize.filter(s => s !== size)
-                              : [...formData.shoeSize, size];
-                            setFormData(prev => ({ ...prev, shoeSize: newSizes }));
-                          }}
+                          onClick={() => handleShoeSizeToggle(size)}
                         >
                           {size}
                         </button>
@@ -508,149 +598,24 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                   </div>
                 )}
 
-                {/* Skateboard Specifications */}
-                {formData.category === 'Skate' && (
+                {specFields.length > 0 && (
                   <div className="category-specs">
-                    <h4><FiInfo /> Skateboard Specifications</h4>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Deck Width</label>
-                        <select 
-                          name="deckWidth" 
-                          value={formData.deckWidth} 
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select Width</option>
-                          {deckWidths.map(width => (
-                            <option key={width} value={width}>{width}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="form-group">
-                        <label>Deck Length</label>
-                        <input
-                          type="text"
-                          name="deckLength"
-                          value={formData.deckLength}
-                          onChange={handleInputChange}
-                          placeholder='e.g., 31.5"'
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Wheelbase</label>
-                        <input
-                          type="text"
-                          name="wheelbase"
-                          value={formData.wheelbase}
-                          onChange={handleInputChange}
-                          placeholder='e.g., 14.25"'
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Concave</label>
-                        <select 
-                          name="concave" 
-                          value={formData.concave} 
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select Concave</option>
-                          {concaveTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Material</label>
-                      <select 
-                        name="material" 
-                        value={formData.material} 
-                        onChange={handleInputChange}
-                      >
-                        <option value="">Select Material</option>
-                        {deckMaterials.map(mat => (
-                          <option key={mat} value={mat}>{mat}</option>
-                        ))}
-                      </select>
+                    <h4><FiInfo /> {selectedCategory?.name} — {availableSubcategories.find((s) => s.slug === formData.subcategory)?.name} Specs <span className="optional-tag">(optional)</span></h4>
+                    <div className="specs-grid">
+                      {specFields.map(renderSpecInput)}
                     </div>
                   </div>
                 )}
 
-                {/* Surf Specifications */}
-                {formData.category === 'Surf' && (
-                  <div className="category-specs">
-                    <h4><FiInfo /> Surfboard Specifications</h4>
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Board Length</label>
-                        <input
-                          type="text"
-                          name="boardLength"
-                          value={formData.boardLength}
-                          onChange={handleInputChange}
-                          placeholder="e.g., 6'2"
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label>Volume (Liters)</label>
-                        <input
-                          type="text"
-                          name="boardVolume"
-                          value={formData.boardVolume}
-                          onChange={handleInputChange}
-                          placeholder="e.g., 32.5L"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Fin Setup</label>
-                      <select 
-                        name="finSetup" 
-                        value={formData.finSetup} 
-                        onChange={handleInputChange}
-                      >
-                        <option value="">Select Fin Setup</option>
-                        {finSetups.map(setup => (
-                          <option key={setup} value={setup}>{setup}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+                {formData.subcategory === '' && formData.category && availableSubcategories.length > 0 && (
+                  <p className="form-hint">Select a sub-category on the Basic Info tab to expose its spec fields.</p>
                 )}
 
-                {/* Accessories - basic sizes */}
-                {formData.category === 'Accessories' && (
-                  <div className="form-group">
-                    <label>Available Sizes (if applicable)</label>
-                    <div className="sizes-grid">
-                      {clothingSizes.map(size => (
-                        <button
-                          key={size}
-                          type="button"
-                          className={`size-btn ${formData.sizes.includes(size) ? 'selected' : ''}`}
-                          onClick={() => handleSizeToggle(size)}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Colors - available for all categories */}
                 <div className="form-group">
-                  <label>Colors</label>
+                  <label>Colors <span className="optional-tag">(optional)</span></label>
                   <div className="colors-input">
                     <div className="colors-list">
-                      {formData.colors.map(color => (
+                      {formData.colors.map((color) => (
                         <span key={color} className="color-tag">
                           {color}
                           <button type="button" onClick={() => handleRemoveColor(color)}>
@@ -665,7 +630,7 @@ const AddProductModal = ({ isOpen, onClose, onSave, editingProduct = null }) => 
                         value={newColor}
                         onChange={(e) => setNewColor(e.target.value)}
                         placeholder="Add a color (e.g., Black, White)"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddColor())}
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddColor())}
                       />
                       <button type="button" onClick={handleAddColor}>
                         <FiPlus />
