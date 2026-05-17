@@ -56,9 +56,27 @@ const request = async (path, { method = 'GET', body, params, headers = {} } = {}
   });
 
   const text = await res.text();
+  const contentType = res.headers.get('content-type') || '';
+  const looksJson = contentType.includes('application/json');
   let data = null;
   if (text) {
-    try { data = JSON.parse(text); } catch { data = text; }
+    if (looksJson) {
+      try { data = JSON.parse(text); }
+      catch {
+        const err = new Error('Server returned malformed JSON');
+        err.status = res.status;
+        throw err;
+      }
+    } else if (!res.ok) {
+      // Non-JSON error body — keep the text for the message but don't pass it on as data.
+      data = text;
+    } else {
+      // Success but non-JSON (e.g., HTML from a misrouted SPA host). Refuse to return
+      // it as data — callers downstream would call .map on a string and blow up.
+      const err = new Error(`Expected JSON from ${path}, got ${contentType || 'unknown content-type'}`);
+      err.status = res.status;
+      throw err;
+    }
   }
 
   if (!res.ok) {

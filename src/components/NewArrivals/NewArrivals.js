@@ -13,8 +13,9 @@ const NewArrivals = () => {
     let cancelled = false;
     (async () => {
       try {
-        const items = await newArrivalsApi.list();
+        const res = await newArrivalsApi.list();
         if (cancelled) return;
+        const items = Array.isArray(res) ? res : [];
         setProducts(items.map((it) => ({
           id: it.product || it._id,
           _id: it._id,

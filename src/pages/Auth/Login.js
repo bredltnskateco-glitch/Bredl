@@ -232,14 +232,6 @@ const Login = () => {
             <Link to="/register">Create one</Link>
           </p>
         </div>
-
-        {process.env.NODE_ENV !== 'production' && (
-          <div className="demo-credentials">
-            <p><strong>Demo Accounts (rotate before any non-local use):</strong></p>
-            <p>Admin: admin@rufusmacba.com / Admin#Demo2026</p>
-            <p>Client: client@test.com / Client#Demo2026</p>
-          </div>
-        )}
       </div>
     </div>
   );
