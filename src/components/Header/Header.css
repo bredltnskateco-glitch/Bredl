@@ -675,6 +675,9 @@
 
   .nav-item {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     border-bottom: 1px solid #2a2a2a;
   }
 
@@ -686,6 +689,7 @@
     display: flex;
     align-items: center;
     padding: 0 20px;
+    width: 100%;
   }
 
   .nav-link {
@@ -707,6 +711,7 @@
   .mega-dropdown {
     position: static;
     transform: none;
+    display: block;
     width: 100%;
     max-width: none;
     border-radius: 0;
@@ -714,6 +719,7 @@
     animation: mobileExpand 0.25s ease;
     background: #111;
     margin: 0;
+    box-sizing: border-box;
   }
 
   @keyframes mobileExpand {
@@ -722,8 +728,14 @@
   }
 
   .dropdown-inner {
+    display: block;
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+
+  .dropdown-column {
+    display: block;
+    width: 100%;
   }
 
   .dropdown-title {
@@ -733,10 +745,20 @@
   }
 
   .dropdown-list {
+    display: flex;
+    flex-direction: column;
     gap: 2px;
+    width: 100%;
+  }
+
+  .dropdown-list li {
+    display: block;
+    width: 100%;
   }
 
   .dropdown-list li a {
+    display: block;
+    width: 100%;
     font-size: 14px;
     padding: 10px 0;
     color: #bbb;

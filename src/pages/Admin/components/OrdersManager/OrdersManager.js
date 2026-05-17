@@ -15,8 +15,6 @@ const PAYMENT_METHOD_LABELS = {
   d17: 'D17',
   visa: 'Visa',
   mastercard: 'MasterCard',
-  stripe: 'Stripe',
-  paypal: 'PayPal',
   transfer: 'Bank Transfer',
   card: 'Card (legacy)',
 };
