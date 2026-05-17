@@ -42,6 +42,30 @@
   justify-content: center;
   border-radius: 50%;
   transition: background-color 0.2s ease;
+  position: relative;
+  z-index: 1003;
+}
+
+/* Close button inside mobile nav drawer (hidden on desktop) */
+.nav-header {
+  display: none;
+}
+
+.nav-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(90deg);
 }
 
 .menu-toggle:hover {
@@ -602,7 +626,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 88px 0 24px;
+    padding: 0 0 24px;
     transform: translateX(100%);
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     border-radius: 0;
@@ -614,6 +638,32 @@
 
   .nav-open {
     transform: translateX(0);
+  }
+
+  /* Mobile drawer header with close button */
+  .nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid #2a2a2a;
+    position: sticky;
+    top: 0;
+    background: #1a1a1a;
+    z-index: 2;
+  }
+
+  .nav-header-title {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* The header's menu-toggle becomes "open only" — close action lives inside drawer */
+  .menu-toggle.open {
+    visibility: hidden;
   }
 
   .nav-list {
@@ -660,7 +710,7 @@
     width: 100%;
     max-width: none;
     border-radius: 0;
-    padding: 14px 20px 22px;
+    padding: 10px 20px 18px 36px;
     animation: mobileExpand 0.25s ease;
     background: #111;
     margin: 0;
@@ -673,7 +723,7 @@
 
   .dropdown-inner {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 14px;
   }
 
   .dropdown-title {
@@ -683,12 +733,23 @@
   }
 
   .dropdown-list {
-    gap: 4px;
+    gap: 2px;
   }
 
   .dropdown-list li a {
     font-size: 14px;
-    padding: 6px 0;
+    padding: 10px 0;
+    color: #bbb;
+    border-bottom: 1px solid #222;
+  }
+
+  .dropdown-list li:last-child a {
+    border-bottom: none;
+  }
+
+  .dropdown-list li a:hover {
+    color: #fff;
+    padding-left: 8px;
   }
 
   .dropdown-featured {
@@ -729,6 +790,27 @@
     margin: -14px 0;
     transform: scaleX(1.1);
   }
+
+  .nav {
+    width: min(90%, 360px);
+  }
+
+  .nav-header {
+    padding: 14px 18px;
+  }
+
+  .nav-link {
+    font-size: 14px;
+    padding: 16px 0;
+  }
+
+  .nav-link-row {
+    padding: 0 18px;
+  }
+
+  .mega-dropdown {
+    padding: 8px 18px 14px 30px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -749,6 +831,27 @@
   .action-btn {
     width: 34px;
     height: 34px;
+  }
+
+  .nav {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .nav-header {
+    padding: 12px 16px;
+  }
+
+  .nav-link-row {
+    padding: 0 16px;
+  }
+
+  .mega-dropdown {
+    padding: 6px 16px 12px 28px;
+  }
+
+  .dropdown-list li a {
+    font-size: 13px;
   }
 }
 

@@ -139,6 +139,17 @@ const Header = ({ isVisible = true }) => {
         )}
 
         <nav className={`nav ${menuOpen ? 'nav-open' : ''}`} aria-label="Primary">
+          <div className="nav-header">
+            <span className="nav-header-title">Menu</span>
+            <button
+              type="button"
+              className="nav-close"
+              onClick={closeMenu}
+              aria-label="Close menu"
+            >
+              <FiX size={22} />
+            </button>
+          </div>
           <ul className="nav-list">
             {navItems.map((item, index) => {
               const isExpanded = mobileExpanded === index;
